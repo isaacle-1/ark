@@ -71,3 +71,27 @@ class Setting(Base):
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     value: Mapped[str] = mapped_column(Text)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class LibraryItem(Base):
+    """An installed ZIM archive or uploaded manual (Phase 1)."""
+
+    __tablename__ = "library_items"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)  # uuid4
+    kind: Mapped[str] = mapped_column(String(16), index=True)  # zim | manual
+    # For zims: catalog key "name:flavour". For manuals: original file name.
+    name: Mapped[str] = mapped_column(String(256), index=True)
+    title: Mapped[str] = mapped_column(String(256))
+    filename: Mapped[str] = mapped_column(String(255))  # safe basename on disk
+    relpath: Mapped[str] = mapped_column(String(512))  # relative to data/
+    size: Mapped[int] = mapped_column(BigInteger, default=0)
+    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="installed", index=True)
+    # zim: queued | downloading | installed | error | paused
+    # manual: installed
+    job_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    installed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)

@@ -263,7 +263,16 @@ async def _noop_handler(ctx: JobContext) -> dict[str, Any]:
     return {"ok": True}
 
 
-def create_worker(db: Database, config: ArkConfig, paths: Paths) -> JobWorker:
+def create_worker(
+    db: Database,
+    config: ArkConfig,
+    paths: Paths,
+    supervisor: Any = None,
+) -> JobWorker:
     worker = JobWorker(db, config, paths)
     worker.register("noop", _noop_handler)
+    if config.library.enabled:
+        from ark.library import make_download_handler
+
+        worker.register("library.download", make_download_handler(paths, config, supervisor))
     return worker

@@ -84,3 +84,64 @@ export interface Job {
   started_at: string | null;
   finished_at: string | null;
 }
+
+export interface LibraryJobBrief {
+  id: string;
+  type: string;
+  status: string;
+  progress: number;
+  message: string | null;
+  bytes_done: number;
+  bytes_total: number | null;
+  speed_bps: number | null;
+  error: string | null;
+}
+
+export interface LibraryItemView {
+  id: string;
+  kind: "zim" | "manual";
+  name: string;
+  title: string;
+  filename: string;
+  size: number;
+  sha256: string | null;
+  status: string;
+  error: string | null;
+  job_id: string | null;
+  active_job: LibraryJobBrief | null;
+  file_url: string | null;
+  created_at: string | null;
+  installed_at: string | null;
+}
+
+export interface LibraryEntry {
+  name: string;
+  flavour: string | null;
+  title: string;
+  category: string;
+  language: string;
+  size: number;
+  sha256: string | null;
+  tier: number | null;
+  status: string;
+  verify_error: string | null;
+  license: string | null;
+  license_note: string | null;
+  source_url: string | null;
+  item: LibraryItemView | null;
+  item_status: string | null;
+  item_error: string | null;
+  active_job: LibraryJobBrief | null;
+  installed: boolean;
+  downloadable: boolean;
+}
+
+export interface LibraryCatalog {
+  updated: string | null;
+  entries: LibraryEntry[];
+}
+
+export interface LibraryItems {
+  items: LibraryItemView[];
+  total: number;
+}

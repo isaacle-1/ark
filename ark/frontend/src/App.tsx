@@ -7,6 +7,7 @@ import LogsPage from "./pages/Logs";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import Search from "./pages/Search";
+import Library from "./pages/Library";
 
 function AdminGuard() {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/library" element={<Library />} />
           <Route
             path="/logs"
             element={

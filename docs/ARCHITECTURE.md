@@ -9,10 +9,11 @@ Browser (LAN)
 FastAPI app (ark.server)  ── serves ──▶ built React SPA (ark/frontend/dist)
    │  /api/…                                 & PWA (sw.js, manifest)
    │
-   ├─ routers/  health · auth · logs · admin   per-module routers in later phases
+   ├─ routers/  health · auth · logs · admin · library
    ├─ auth.py   argon2id · sessions · rate limit
    ├─ jobs.py   async worker over tasks table (jobs.*)
-   ├─ supervisor.py sidecar lifecycle (kiwix, valhalla, … in later phases)
+   ├─ library.py resumable, hash-verified ZIM/download engine + manuals
+   ├─ supervisor.py sidecar lifecycle (kiwix first; valhalla, … in later phases)
    ├─ db.py     SQLAlchemy + SQLite (WAL) + Alembic migrations
    └─ logging_setup.py JSON logs · per-module files · LogBus (SSE)
 ```
@@ -64,9 +65,36 @@ FastAPI app (ark.server)  ── serves ──▶ built React SPA (ark/frontend/
 - `JobWorker` polls `jobs` table, runs a handler registry (registered via
   `@handles(kind)`), writes status/progress/result/timestamps; interrupted jobs
   are marked `failed` on startup.
-- `Supervisor` spawns sidecars from `get_sidecar_specs()` (empty in phase 0),
-  restarts with 1→30 s backoff, gives up after 30 crashes per minute (crash-loop
-  lock), captures sidecar stdout/stderr to `data/logs/<name>.log`.
+- `Supervisor` spawns sidecars from `get_sidecar_specs(paths, config)` (real spec
+  factory since Phase 1), restarts with 1→30 s backoff, gives up after 30
+  crashes per minute (crash-loop lock), captures sidecar stdout/stderr to
+  `data/logs/<name>.log`. `restart(name, spec | None)` re-runs a sidecar from a
+  new spec (or unregisters it); the library download handler calls it after a
+  ZIM lands so `kiwix-serve` picks up the new archive without a restart.
+
+### Information Library (`ark/library.py`, `routers/library.py`)
+- `catalog/kiwix.json` holds verified ZIM entries (`size`, `sha256`,
+  `zim_url` + `mirror_urls`, `license`, `tier`, `status`). Read-only,
+  replaceable. The install job snapshots the entry into its payload so removing
+  the catalog never breaks an active download.
+- Download engine (`download_zim`): writes `data/tmp/<file>.zim.part`, resumes
+  byte-exact from the partial file via `Range`, re-hashes the kept prefix, tries
+  mirrors in order and rolls back to the last good offset on failure, cancels
+  keep the partial (`status = paused`), a checksum mismatch deletes it. Progress
+  is threaded (`asyncio.to_thread`) and reported ≥1 s with speed + 10/25/50/75/90%
+  milestones; result go to `data/library/`.
+- Uploads (`manual` items): streamed into `data/manuals/`, filename sanitized to
+  a safe basename, 413 over `max_manual_mb`, sha256 stored, served inline.
+- API under `/api/library/…`: catalog, install (admin, 202 + job id), items,
+  delete (admin, path-traversal-safe, 409 while active), manuals upload/list/
+  serve. ZIMs are served by the `kiwix-serve` sidecar on
+  `data`-local port (default 8139) through `/svc/kiwix/`.
+- kiwix sidecar spec: `-i 127.0.0.1 -b -s 10 -L 8 -k <zim paths>`; skipped when
+  disabled / binary missing / no ZIMs installed. Health: `/api/health` reports
+  `library` module (entries, installed, kiwix binary present); `ark doctor`
+  section 9b explains what's missing.
+- Worker is **serial**: one download at a time (documented Phase 1 tradeoff;
+  UI shows queue position via the active job.
 
 ## Frontend (`ark/frontend`)
 - React 18 + TypeScript + Vite 6 + Tailwind v4 (`@tailwindcss/vite`), no CDN.
@@ -77,8 +105,9 @@ FastAPI app (ark.server)  ── serves ──▶ built React SPA (ark/frontend/
   (`src/lib/toast.tsx`); `ErrorBoundary` reports crashes to `/api/client-log`.
 - API client (`src/api/client.ts`) returns typed responses and throws
   `ApiError` with `status` + `requestId`.
-- Pages: Dashboard (module tiles + system status), Logs (admin), Settings
-  (theme, log level), Search (placeholder), Login. Routes in `src/App.tsx`.
+- Pages: Dashboard (module tiles + system status), Library (catalog/install/
+  manuals/kiwix reader), Logs (admin), Settings (theme, log level), Search
+  (placeholder), Login. Routes in `src/App.tsx`.
 
 ## Lifecycle & deployment
 - Native: `scripts/install.sh` (idempotent) installs apt deps, `ark` user, venv,
@@ -91,7 +120,8 @@ FastAPI app (ark.server)  ── serves ──▶ built React SPA (ark/frontend/
   GHCR image on `v*` tags.
 
 ## Phase roadmap (design intent)
-1. Library (kiwix ZIM) + manuals — first sidecars.
+1. **Library (kiwix ZIM) + manuals — DONE** (Phase 1): catalog + resumable
+   downloads + kiwix sidecar + manual uploads.
 2. Maps (Valhalla offline routing) + geocoding (Photon) — big data.
 3. Notes — SQLite-backed editor with offline-first sync.
 4. Radio (SDR) — device-side; ARK frontend shows the UI.

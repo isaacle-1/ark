@@ -128,7 +128,11 @@ ARK_HOME (= repo root)
 
 ## Phase status
 
-- **Phase 0 (Foundation): COMPLETE — PR #1 open (`phase-0-foundation` → `main`), awaiting user merge.**
-  All gates green: `make test` + `make e2e` locally, CI (backend/frontend/e2e/docker) pass,
-  systemd service running in this LXC, deliberate-break drill 32 ms.
-- Phases 1–9: not started (see the master prompt / PR descriptions for scope).
+- **Phase 0 (Foundation): COMPLETE, MERGED** (`f32caac` on `main`), phase-0-repro-fixes PR #2 open.
+- **Phase 1 (Information Library): IN PROGRESS** on `phase-1-library`. Backend
+  engine + API + sidecar + frontend implemented; `make test` and `make e2e`
+  green locally. Remaining: push + PR. Rules honored: catalog URLs verified
+  against live sources (19 entries), only the 62 KB fixture ZIM used in tests,
+  downloads resumable + hash-verified + under `data/`. iFixit license remains
+  **UNVERIFIED** (user decision required before enabling that entry).
+- Phases 2–9: not started (see the master prompt / PR descriptions for scope).

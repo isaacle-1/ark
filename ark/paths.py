@@ -101,6 +101,26 @@ class Paths:
         return self.data / "uploads"
 
     @property
+    def library_dir(self) -> Path:
+        return self.data / "library"
+
+    @property
+    def manuals_dir(self) -> Path:
+        return self.data / "manuals"
+
+    @property
+    def bin_dir(self) -> Path:
+        return self.home / "bin"
+
+    @property
+    def kiwix_binary(self) -> Path:
+        return self.bin_dir / "kiwix-serve"
+
+    @property
+    def catalog_file(self) -> Path:
+        return self.home / "catalog" / "kiwix.json"
+
+    @property
     def frontend_dist(self) -> Path:
         return self.home / "ark" / "frontend" / "dist"
 

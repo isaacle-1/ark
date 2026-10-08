@@ -29,6 +29,9 @@ def ark_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, ArkC
     shutil.copytree(
         _REPO / "migrations", tmp_path / "migrations", ignore=shutil.ignore_patterns("__pycache__")
     )
+    # Same for the Kiwix catalog (library endpoints/health read ARK_HOME/catalog).
+    (tmp_path / "catalog").mkdir(exist_ok=True)
+    shutil.copy2(_REPO / "catalog" / "kiwix.json", tmp_path / "catalog" / "kiwix.json")
 
     from ark.config import ArkConfig
     from ark.paths import Paths, ensure_data_dirs

@@ -7,6 +7,7 @@ import { useToast } from "../lib/toast";
 
 const NAV = [
   { to: "/", label: "Dashboard", end: true },
+  { to: "/library", label: "Library" },
   { to: "/logs", label: "Logs", admin: true },
   { to: "/settings", label: "Settings" },
   { to: "/search", label: "Search" },

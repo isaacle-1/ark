@@ -19,7 +19,7 @@ def test_svc_proxies_to_registered_sidecar(paths, config, monkeypatch) -> None:
         command=(sys.executable, "-m", "http.server", "18765", "--directory", str(content_dir)),
         port=18765,
     )
-    monkeypatch.setattr(server_module, "get_sidecar_specs", lambda _paths: [spec])
+    monkeypatch.setattr(server_module, "get_sidecar_specs", lambda _paths, _config: [spec])
 
     from fastapi.testclient import TestClient
 
@@ -51,7 +51,7 @@ def test_svc_503_when_sidecar_exited(paths, config, monkeypatch) -> None:
         port=18766,
         auto_restart=False,
     )
-    monkeypatch.setattr(server_module, "get_sidecar_specs", lambda _paths: [spec])
+    monkeypatch.setattr(server_module, "get_sidecar_specs", lambda _paths, _config: [spec])
 
     from fastapi.testclient import TestClient
 

@@ -274,12 +274,14 @@ def _run_doctor(paths: Paths) -> list[dict[str, str]]:
         else:
             checks.append(_check("frontend", "WARN", "not built", fix))
 
-    # 9. Sidecars (later phases register specs; empty now = nothing to check)
+    # 9. Sidecars (specs are guarded by enabled/binary/ZIM checks)
     from ark.supervisor import get_sidecar_specs
 
-    specs = get_sidecar_specs(paths)
+    specs = get_sidecar_specs(paths, cfg)
     if not specs:
-        checks.append(_check("sidecars", "PASS", "none registered (phase 0)"))
+        checks.append(
+            _check("sidecars", "PASS", "none running (no ZIMs installed yet, or disabled)")
+        )
     for spec in specs:
         binary = spec.command[0]
         found = shutil.which(binary) or (Path(binary).is_file() if "/" in binary else False)
@@ -291,6 +293,38 @@ def _run_doctor(paths: Paths) -> list[dict[str, str]]:
                 None if found else "scripts/install.sh installs it (or disable the module)",
             )
         )
+
+    # 9b. Library content (catalog, installed ZIMs, kiwix-serve binary)
+    if not cfg.library.enabled:
+        checks.append(_check("library", "PASS", "disabled in ark.toml [library]"))
+    else:
+        from ark.library import LibraryError, load_catalog
+
+        try:
+            entries = len(load_catalog(paths)["entries"])
+        except LibraryError as exc:
+            checks.append(
+                _check(
+                    "library",
+                    "FAIL",
+                    str(exc),
+                    "restore catalog/kiwix.json (git checkout catalog/)",
+                )
+            )
+        else:
+            zims = sorted(p for p in paths.library_dir.glob("*.zim") if p.is_file())
+            detail = f"{entries} catalog entries, {len(zims)} ZIM(s) installed"
+            if cfg.library.kiwix_enabled and not paths.kiwix_binary.is_file():
+                checks.append(
+                    _check(
+                        "library",
+                        "WARN",
+                        f"{detail}; kiwix-serve not installed (reading ZIMs directly only)",
+                        "run scripts/install.sh or drop kiwix-serve into bin/",
+                    )
+                )
+            else:
+                checks.append(_check("library", "PASS", detail))
 
     # 10. systemd service state (informational)
     if shutil.which("systemctl"):

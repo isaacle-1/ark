@@ -101,6 +101,23 @@ if [ ! -e "$ARK_HOME/ark/frontend/dist/index.html" ]; then
     "$ARK_HOME/ark/frontend/dist"
 fi
 
+# --kiwix-tools (sidecar: serves installed ZIMs; pinned, official .md5) ------
+KIWIX_TAG="kiwix-tools_linux-x86_64-3.8.2"
+KIWIX_URL="https://download.kiwix.org/release/kiwix-tools/${KIWIX_TAG}.tar.gz"
+KIWIX_MD5="917ea9632a7a7fca946b63b2378579f3"
+if [ ! -x "$ARK_HOME/bin/kiwix-serve" ]; then
+  echo "==> Fetching kiwix-tools 3.8.2 (serves the installed ZIM library)"
+  mkdir -p "$ARK_HOME/bin"
+  curl -fsSL -o "$ARK_HOME/bin/kiwix-tools.tar.gz" "$KIWIX_URL"
+  echo "$KIWIX_MD5 $ARK_HOME/bin/kiwix-tools.tar.gz" | md5sum -c -
+  tar -xzf "$ARK_HOME/bin/kiwix-tools.tar.gz" -C "$ARK_HOME/bin"
+  tar -xzf "$ARK_HOME/bin/kiwix-tools.tar.gz" -C "$ARK_HOME/bin"
+  rm -f "$ARK_HOME/bin/kiwix-tools.tar.gz"
+  ln -sfn "$KIWIX_TAG" "$ARK_HOME/bin/kiwix-tools"
+  ln -sfn kiwix-tools/kiwix-serve "$ARK_HOME/bin/kiwix-serve"
+  "$ARK_HOME/bin/kiwix-serve" --version | head -1
+fi
+
 # --config, db, admin --------------------------------------------------------
 echo "==> Initializing config + database"
 if [ "${SKIP_SYSTEM:-0}" = "0" ]; then

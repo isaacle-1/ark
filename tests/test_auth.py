@@ -53,6 +53,9 @@ def test_admin_endpoints_require_login(client) -> None:
         ("/api/admin/logs/level", "get"),
         ("/api/admin/logs/download?file=ark.log", "get"),
         ("/api/admin/jobs", "get"),
+        ("/api/library/install", "post"),
+        ("/api/library/items/anything", "delete"),
+        ("/api/library/manuals", "post"),
     ]:
         resp = getattr(client, method)(path)
         assert resp.status_code == 401, (path, resp.status_code)
@@ -71,4 +74,10 @@ def test_admin_endpoints_reject_non_admin(client, config, monkeypatch) -> None:
         session = create_session(db, user, ttl_hours=1)
         token = session.token
     resp = client.get("/api/admin/logs/history", cookies={"ark_session": token})
+    assert resp.status_code == 403
+    resp = client.post(
+        "/api/library/install",
+        json={"name": "wikipedia_en_all"},
+        cookies={"ark_session": token},
+    )
     assert resp.status_code == 403

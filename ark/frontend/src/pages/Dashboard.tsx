@@ -16,7 +16,7 @@ interface ModuleDef {
 }
 
 const MODULES: ModuleDef[] = [
-  { key: "library", title: "Information Library", desc: "Kiwix ZIMs — Wikipedia, medical, survival guides", phase: "Phase 1", planned: true },
+  { key: "library", title: "Information Library", desc: "Offline Kiwix ZIMs + uploaded manuals", phase: "Phase 1", planned: false, href: "/library" },
   { key: "content", title: "Content Manager", desc: "Catalogs, resumable downloads, sideload", phase: "Phase 1", planned: true },
   { key: "notes", title: "Notes", desc: "Fast offline Markdown", phase: "Phase 2", planned: true },
   { key: "toolbox", title: "Computer Toolbox", desc: "Encryption, encodings, calculators, QR", phase: "Phase 2", planned: true },
