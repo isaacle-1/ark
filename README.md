@@ -5,7 +5,7 @@ Project N.O.M.A.D.). Runs on a home server (Proxmox LXC), serves on one port
 (default 8080), and is used from any browser on the LAN. No internet is needed
 at runtime except for the Content Manager's explicit download actions.
 
-> **Phase status:** Phase 0 (Foundation) in progress. Phases 1–9 planned.
+> **Phase status:** Phase 1 (Information Library) in progress. Phases 2–9 planned.
 
 ## Why ARK
 

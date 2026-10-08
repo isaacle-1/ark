@@ -26,6 +26,11 @@ def server_proc(tmp_path_factory: pytest.TempPathFactory):
         home / "migrations",
         ignore=shutil.ignore_patterns("__pycache__"),
     )
+    # catalog must live inside ARK_HOME (server reads it per request).
+    catalog_src = Path(os.getcwd()) / "catalog" / "kiwix.json"
+    if catalog_src.is_file():
+        (home / "catalog").mkdir(exist_ok=True)
+        shutil.copy2(catalog_src, home / "catalog" / "kiwix.json")
     dist = home / "ark" / "frontend" / "dist"
     dist.parent.mkdir(parents=True, exist_ok=True)
     real_dist = Path(os.getcwd()) / "ark" / "frontend" / "dist"
@@ -120,4 +125,15 @@ def test_dashboard_login_logs_live_tail(server_proc):
         page.click("[data-testid=pause-btn]")
 
         page.screenshot(path=str(home / "logs-page.png"))
+
+        # Library page (admin): catalog renders + install controls for verified entries.
+        page.goto(base + "/library", wait_until="networkidle")
+        assert page.locator("[data-testid=library-catalog]").is_visible()
+        install_btn = page.locator("[data-testid='install-wikipedia_en_all:mini']")
+        assert install_btn.is_visible() and install_btn.is_enabled()
+        # All 19 verified catalog entries render as rows.
+        assert page.locator("[data-testid^='row-']").count() >= 19
+        # Manuals section (upload control requires admin — present since we're admin).
+        assert page.locator("[data-testid=manual-upload]").is_visible()
+        page.screenshot(path=str(home / "library-page.png"))
         browser.close()

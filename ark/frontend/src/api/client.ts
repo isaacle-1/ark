@@ -18,9 +18,13 @@ function describeDetail(detail: unknown, fallback: string): string {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const isForm = init?.body instanceof FormData;
   const res = await fetch(path, {
     credentials: "same-origin",
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    headers: {
+      ...(isForm ? {} : { "Content-Type": "application/json" }),
+      ...(init?.headers ?? {}),
+    },
     ...init,
   });
   if (res.ok) {
@@ -49,6 +53,11 @@ export const api = {
   put: <T>(path: string, body?: unknown): Promise<T> =>
     request<T>(path, { method: "PUT", body: JSON.stringify(body ?? {}) }),
   del: <T>(path: string): Promise<T> => request<T>(path, { method: "DELETE" }),
+  postFile: <T>(path: string, file: File): Promise<T> => {
+    const form = new FormData();
+    form.append("file", file, file.name);
+    return request<T>(path, { method: "POST", body: form });
+  },
 };
 
 export function fmtBytes(n: number | null | undefined): string {
