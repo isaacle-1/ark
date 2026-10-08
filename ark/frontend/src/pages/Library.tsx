@@ -177,9 +177,8 @@ export default function Library() {
         }
       />
 
-      {/* 01 — INSTALLED ZIMs */}
+      {/* INSTALLED ZIMs */}
       <Panel
-        no="01"
         title="Installed zim archives"
         className="mb-4"
         actions={
@@ -238,8 +237,8 @@ export default function Library() {
         )}
       </Panel>
 
-      {/* 02 — CATALOG */}
-      <Panel no="02" title="Catalog" className="mb-4" flush testid="library-catalog">
+      {/* CATALOG */}
+      <Panel title="Catalog" className="mb-4" flush testid="library-catalog">
         <table className="tbl">
           <thead>
             <tr>
@@ -264,7 +263,7 @@ export default function Library() {
                   </td>
                   <td className="mono text-[var(--c-muted)]">{e.category}</td>
                   <td>
-                    <div className="mono text-[11px]">{e.license ?? "—"}</div>
+                    <div className="mono text-[11px]">{e.license ?? "n/a"}</div>
                     {e.license_note && (
                       <div className="mono text-[10px] text-[color:var(--c-warn)]" title={e.license_note}>
                         {e.license_note}
@@ -273,7 +272,7 @@ export default function Library() {
                   </td>
                   <td className="num r">{fmtBytes(e.size)}</td>
                   <td>
-                    {e.tier ? <Num className="text-[12px]">T{e.tier}</Num> : <span className="muted">—</span>}
+                    {e.tier ? <Num className="text-[12px]">T{e.tier}</Num> : <span className="muted">n/a</span>}
                   </td>
                   <td>
                     <Badge tone={entryTone(e)} className={e.item_error ? "badge-err" : ""}>
@@ -319,7 +318,7 @@ export default function Library() {
             {entries.length === 0 && (
               <tr>
                 <td className="fine" colSpan={7}>
-                  Catalog unavailable — backend reporting no entries.
+                  Catalog unavailable, backend reporting no entries.
                 </td>
               </tr>
             )}
@@ -327,13 +326,13 @@ export default function Library() {
         </table>
         {anyActive && (
           <div className="border-t border-[var(--c-line)] p-2">
-            <StatusLine tone="active">download worker busy — one job at a time</StatusLine>
+            <StatusLine tone="active">download worker busy, one job at a time</StatusLine>
           </div>
         )}
       </Panel>
 
-      {/* 03 — MANUALS */}
-      <Panel no="03" title="Survival manuals" testid="manuals-list">
+      {/* MANUALS */}
+      <Panel title="Survival manuals" testid="manuals-list">
         {isAdmin && (
           <div className="mb-3 flex flex-wrap items-end gap-2">
             <Field label="manual file" className="min-w-[240px]">
@@ -362,7 +361,7 @@ export default function Library() {
                   <tr key={m.id}>
                     <td className="mono">{m.filename}</td>
                     <td className="num r">{fmtBytes(m.size)}</td>
-                    <td className="fine">{m.installed_at?.slice(0, 10) ?? "—"}</td>
+                    <td className="fine">{m.installed_at?.slice(0, 10) ?? "n/a"}</td>
                     <td className="r">
                       <div className="inline-flex gap-1">
                         {m.file_url && (

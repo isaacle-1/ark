@@ -1,11 +1,10 @@
-/* ui.tsx — ARK field-manual component set (Panel, Button, Table chrome,
+/* ui.tsx: ARK field-manual component set (Panel, Button, Table chrome,
    Badge, StatusLine, Field, Stat, IndexRow). Classes defined in styles.css. */
 
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 
 /* -- Panel ------------------------------------------------------------------ */
 export function Panel({
-  no,
   title,
   meta,
   actions,
@@ -14,7 +13,6 @@ export function Panel({
   testid,
   children,
 }: {
-  no?: string;
   title?: string;
   meta?: ReactNode;
   actions?: ReactNode;
@@ -25,10 +23,9 @@ export function Panel({
 }) {
   return (
     <section className={"panel " + className} data-testid={testid}>
-      {(no || title || meta || actions) && (
+      {(title || meta || actions) && (
         <header className="panel-head">
           <div className="flex min-w-0 items-baseline gap-2">
-            {no && <span className="label">{no}</span>}
             {title && <span className="panel-head-title">{title}</span>}
           </div>
           {(meta || actions) && (
@@ -195,9 +192,8 @@ export function Stat({
   );
 }
 
-/* -- Index row (numbered module/catalog index) ------------------------------ */
+/* -- Index row (module/catalog index) --------------------------------------- */
 export function IndexRow({
-  no,
   title,
   desc,
   meta,
@@ -206,7 +202,6 @@ export function IndexRow({
   onKeyDown,
   href,
 }: {
-  no?: string;
   title: ReactNode;
   desc?: ReactNode;
   meta?: ReactNode;
@@ -218,10 +213,9 @@ export function IndexRow({
   const cls = "index-row" + (onClick || href ? " cursor-pointer" : "");
   const body = (
     <>
-      {no && <span className="index-no">{no}</span>}
       <span className="index-main">
         <span className="index-title">{title}</span>
-        {desc && <span className="index-desc"> — {desc}</span>}
+        {desc && <span className="index-desc">{desc}</span>}
       </span>
       {meta && <span className="index-meta">{meta}</span>}
       {action}

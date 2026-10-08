@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <span className="panel-head-meta">client crashes are logged server-side</span>
           </div>
           <div className="panel-body">
-            <p className="mono text-sm text-[color:var(--c-err)]">— {this.state.error.message}</p>
+            <p className="mono text-sm text-[color:var(--c-err)]">{this.state.error.message}</p>
             <p className="fine mt-1">This failure was reported to the server logs.</p>
             <button
               className="btn btn-primary mt-4"

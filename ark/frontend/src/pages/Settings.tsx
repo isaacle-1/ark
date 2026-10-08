@@ -57,7 +57,7 @@ export default function Settings() {
     <div className="mx-auto max-w-3xl">
       <PageTitle title="Settings" />
 
-      <Panel no="01" title="Appearance" className="mb-4" meta="saved in this browser">
+      <Panel title="Appearance" className="mb-4" meta="saved in this browser">
         <div className="flex flex-wrap gap-2">
           {THEMES.map((t) => (
             <Button
@@ -73,7 +73,7 @@ export default function Settings() {
         <p className="fine mt-2">{THEMES.find((t) => t.value === theme)?.hint}.</p>
       </Panel>
 
-      <Panel no="02" title="Logging" className="mb-4">
+      <Panel title="Logging" className="mb-4">
         <Field label="log level" className="max-w-[180px]">
           <select className="input" value={level} onChange={(e) => saveLevel(e.target.value)} data-testid="log-level">
             {LEVELS.map((l) => (
@@ -85,21 +85,21 @@ export default function Settings() {
         </Field>
         <p className="fine mt-2">
           source: <code>{levelSource}</code>
-          {levelSource === "env" && " — LOG_LEVEL env var wins until unset"} · changes take effect
+          {levelSource === "env" && " (LOG_LEVEL env var wins until unset)"} · changes take effect
           immediately and are persisted in the DB.
         </p>
       </Panel>
 
-      <Panel no="03" title="System">
+      <Panel title="System">
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="label py-0.5">Version</dt>
-          <dd className="mono">{health?.version ?? "—"}</dd>
+          <dd className="mono">{health?.version ?? "n/a"}</dd>
           <dt className="label py-0.5">ARK_HOME</dt>
-          <dd className="break-all mono text-xs">{health?.ark_home ?? "—"}</dd>
+          <dd className="break-all mono text-xs">{health?.ark_home ?? "n/a"}</dd>
           <dt className="label py-0.5">Auth mode</dt>
-          <dd className="mono">{health?.auth_mode ?? "—"}</dd>
+          <dd className="mono">{health?.auth_mode ?? "n/a"}</dd>
           <dt className="label py-0.5">Process</dt>
-          <dd className="mono">pid {health?.pid ?? "—"} · up {Math.round(health?.uptime_seconds ?? 0)}s</dd>
+          <dd className="mono">pid {health?.pid ?? "n/a"} · up {Math.round(health?.uptime_seconds ?? 0)}s</dd>
         </dl>
       </Panel>
     </div>

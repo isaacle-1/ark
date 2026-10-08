@@ -579,14 +579,6 @@ select.input:focus {
 .index-row:hover {
   background: var(--c-panel2);
 }
-.index-no {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
-  color: var(--c-muted);
-  flex: none;
-  width: 2.1rem;
-}
 .index-main {
   flex: 1;
   min-width: 0;
@@ -657,15 +649,6 @@ pre {
 }
 .nav-item.active:hover {
   color: var(--c-accent-ink);
-}
-.nav-item .nav-no {
-  font-size: 0.6rem;
-  color: var(--c-muted);
-  flex: none;
-}
-.nav-item.active .nav-no {
-  color: inherit;
-  opacity: 0.65;
 }
 
 /* -- toast ----------------------------------------------------------------------- */

@@ -1,4 +1,4 @@
-/* Global search placeholder — Ctrl+K palette lands with Phase 1 modules. */
+/* Global search placeholder. Ctrl+K palette lands with a later phase. */
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search as SearchIcon } from "lucide-react";
@@ -18,7 +18,7 @@ export default function Search() {
     <div className="mx-auto max-w-2xl">
       <PageTitle title="Global search" />
 
-      <Panel no="01" title="Search everything">
+      <Panel title="Search everything">
         <div className="flex items-center gap-2">
           <SearchIcon size={16} className="shrink-0 text-[var(--c-muted)]" />
           <input className="input" placeholder="Searching everywhere…" autoFocus disabled />

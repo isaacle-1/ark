@@ -1,4 +1,4 @@
-/* Logs page — live SSE tail, filter, pause, copy-as-text, download. Admin. */
+/* Logs page: live SSE tail, filter, pause, copy-as-text, download. Admin. */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Copy, Download, Pause, Play, X } from "lucide-react";
 import { api } from "../api/client";
@@ -128,7 +128,7 @@ export default function LogsPage() {
   function copyText() {
     void navigator.clipboard.writeText(visibleText).then(
       () => undefined,
-      () => notify("Clipboard blocked — select text to copy manually", "info"),
+      () => notify("Clipboard blocked, select text to copy manually", "info"),
     );
   }
 
@@ -150,7 +150,7 @@ export default function LogsPage() {
         }
       />
 
-      <Panel no="01" title="Filter" className="mb-3">
+      <Panel title="Filter" className="mb-3">
         <div className="flex flex-wrap items-end gap-3">
           <Field label="source" className="min-w-[180px]">
             <select className="input" value={file} onChange={(e) => setFile(e.target.value)}>
@@ -229,7 +229,7 @@ export default function LogsPage() {
         )}
       </Panel>
 
-      <Panel no="02" title="Lines" flush testid="log-panel">
+      <Panel title="Lines" flush testid="log-panel">
         <div className="max-h-[65vh] overflow-y-auto font-mono text-[12px] leading-5" data-testid="log-rows">
           {rows.length === 0 ? (
             <div className="p-4 text-[var(--c-muted)]">No matching lines yet…</div>
@@ -274,7 +274,7 @@ function Row({ entry, onExpand }: { entry: LogEntry; onExpand: () => void }) {
 
 function DetailPanel({ entry, onClose }: { entry: LogEntry; onClose: () => void }) {
   return (
-    <Panel no="·" title="Full json line" className="border-[color:var(--c-accent)]" actions={<Button variant="plain" onClick={onClose}>close</Button>}>
+    <Panel title="Full json line" className="border-[color:var(--c-accent)]" actions={<Button variant="plain" onClick={onClose}>close</Button>}>
       <pre className="overflow-x-auto p-2 text-[12px]" style={{ background: "var(--c-surface)", border: "1px solid var(--c-line)" }}>
         {JSON.stringify(entry, null, 1)}
       </pre>

@@ -1,4 +1,4 @@
-/* Toast notifications — API failures surface the request_id here. */
+/* Toast notifications. API failures surface the request_id here. */
 import { createContext, useCallback, useContext, useRef, useState, ReactNode } from "react";
 import type { ApiError } from "../api/client";
 

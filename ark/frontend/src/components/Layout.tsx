@@ -1,4 +1,4 @@
-/* Layout: numbered module-index sidebar, system status footer, user menu. */
+/* Layout: module-index sidebar, system status footer, user menu. */
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, UserRound } from "lucide-react";
@@ -8,11 +8,11 @@ import { useToast } from "../lib/toast";
 import { Button, StatusLine } from "./ui";
 
 const NAV = [
-  { to: "/", label: "Dashboard", no: "00", end: true },
-  { to: "/library", label: "Library", no: "01" },
-  { to: "/logs", label: "Logs", no: "02", admin: true },
-  { to: "/settings", label: "Settings", no: "03" },
-  { to: "/search", label: "Search", no: "04" },
+  { to: "/", label: "Dashboard", end: true },
+  { to: "/library", label: "Library" },
+  { to: "/logs", label: "Logs", admin: true },
+  { to: "/settings", label: "Settings" },
+  { to: "/search", label: "Search" },
 ];
 
 export default function Layout() {
@@ -82,7 +82,6 @@ export default function Layout() {
               end={n.end}
               className={({ isActive }) => "nav-item " + (isActive ? "active" : "")}
             >
-              <span className="nav-no">{n.no}</span>
               {n.label}
             </NavLink>
           ))}
