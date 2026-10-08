@@ -35,7 +35,8 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           tar -czf "ark-${VERSION}-offline.tar.gz" \
-            ark migrations alembic.ini requirements.txt pyproject.toml \
+            ark migrations alembic.ini requirements.txt requirements-dev.txt \
+            pyproject.toml Makefile README.md LICENSE \
             catalog scripts docs wheelhouse \
             --exclude ark/frontend/node_modules
       - uses: softprops/action-gh-release@v2
