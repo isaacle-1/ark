@@ -6,6 +6,11 @@ set -euo pipefail
 ARK_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 echo "==> ARK_HOME: $ARK_HOME"
 
+# Keep all caches inside ARK_HOME (never in ~ or /var) — same as the Makefile.
+export PIP_CACHE_DIR="$ARK_HOME/data/cache/pip"
+export npm_config_cache="$ARK_HOME/data/cache/npm"
+mkdir -p "$PIP_CACHE_DIR" "$npm_config_cache"
+
 if [ "$(id -u)" != "0" ]; then
   echo "WARNING: not running as root — skipping apt packages, ark user and systemd unit."
   echo "         Run with sudo for a full install."
@@ -19,8 +24,11 @@ apt_deps=(python3 python3-venv python3-dev ca-certificates curl git make xz-util
 if [ "${SKIP_SYSTEM:-0}" = "0" ]; then
   echo "==> Installing system packages: ${apt_deps[*]}"
   export DEBIAN_FRONTEND=noninteractive
-  apt-get update -qq
-  apt-get install -y -qq "${apt_deps[@]}"
+  if ! apt-get update -qq || ! apt-get install -y -qq "${apt_deps[@]}"; then
+    echo "ERROR: apt failed. Is the host online?" >&2
+    echo "       Offline installs: pre-install these packages: ${apt_deps[*]}" >&2
+    exit 1
+  fi
 fi
 
 # --data layout + service user ---------------------------------------------
@@ -38,7 +46,9 @@ fi
 
 # --node (only needed to build the frontend from source) -------------------
 export PATH="$ARK_HOME/bin/node/bin:$PATH"
-NODE_URL="${NODE_URL:-https://nodejs.org/dist/latest-v22.x/node-v22.23.3-linux-x64.tar.xz}"
+# Fully pinned (version inside the path too — "latest-v22.x" would 404 once
+# 22.x moves on) — reproducible bit-for-bit installs.
+NODE_URL="${NODE_URL:-https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz}"
 if [ ! -e "$ARK_HOME/ark/frontend/dist/index.html" ]; then
   if command -v node >/dev/null 2>&1; then
     echo "==> node found at $(command -v node)"
@@ -59,12 +69,29 @@ if [ ! -x "$ARK_HOME/.venv/bin/python" ]; then
   echo "==> Creating venv"
   python3 -m venv "$ARK_HOME/.venv"
 fi
-echo "==> Installing python deps"
-"$ARK_HOME/.venv/bin/pip" install --upgrade pip
-"$ARK_HOME/.venv/bin/pip" install -r "$ARK_HOME/requirements.txt"
-if [ "${DEV:-0}" = "1" ] || [ "${1:-}" = "--dev" ]; then
-  "$ARK_HOME/.venv/bin/pip" install -r "$ARK_HOME/requirements-dev.txt"
+# Release bundles ship a wheelhouse/ — install fully offline from it.
+# pip insists the cache is owned by the invoking user; during install that's
+# root (data/ is chowned back to ark at the end).
+if [ "${SKIP_SYSTEM:-0}" = "0" ]; then chown -R 0:0 "$PIP_CACHE_DIR" 2>/dev/null || true; fi
+if [ -d "$ARK_HOME/wheelhouse" ]; then
+  echo "==> Installing python deps from wheelhouse (offline)"
+  "$ARK_HOME/.venv/bin/pip" install --no-index --find-links "$ARK_HOME/wheelhouse" \
+    -r "$ARK_HOME/requirements.txt"
+  if [ "${DEV:-0}" = "1" ] || [ "${1:-}" = "--dev" ]; then
+    "$ARK_HOME/.venv/bin/pip" install --no-index --find-links "$ARK_HOME/wheelhouse" \
+      -r "$ARK_HOME/requirements-dev.txt" || \
+      echo "WARNING: requirements-dev.txt not fully in wheelhouse — skipped"
+  fi
+else
+  echo "==> Installing python deps"
+  "$ARK_HOME/.venv/bin/pip" install --upgrade pip
+  "$ARK_HOME/.venv/bin/pip" install -r "$ARK_HOME/requirements.txt"
+  if [ "${DEV:-0}" = "1" ] || [ "${1:-}" = "--dev" ]; then
+    "$ARK_HOME/.venv/bin/pip" install -r "$ARK_HOME/requirements-dev.txt"
+  fi
 fi
+
+if [ "${SKIP_SYSTEM:-0}" = "0" ]; then chown -R ark:ark "$PIP_CACHE_DIR" 2>/dev/null || true; fi
 
 # --frontend build (source path; release bundle skips node) ----------------
 if [ ! -e "$ARK_HOME/ark/frontend/dist/index.html" ]; then
@@ -109,6 +136,11 @@ if [ "${SKIP_SYSTEM:-0}" = "0" ]; then
   systemctl daemon-reload
   systemctl enable ark.service
   systemctl restart ark.service
+  # Wait until the server actually answers (doctor below checks :8080).
+  for _ in $(seq 1 30); do
+    if curl -fsS -o /dev/null http://127.0.0.1:8080/healthz 2>/dev/null; then break; fi
+    sleep 1
+  done
 fi
 
 # --verify as the service user (doctor writes into data/ as ark) -----------

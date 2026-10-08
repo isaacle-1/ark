@@ -92,8 +92,8 @@ ARK_HOME (= repo root)
   ark/                 Python package: server.py (FastAPI app), cli.py, config.py,
                        logging_setup.py, db.py, models.py, auth.py, jobs.py,
                        supervisor.py, routers/, frontend/ (React+Vite+TS+Tailwind)
-  scripts/             install.sh, doctor.sh, update.sh, backup.sh, lxc-install.sh,
-                       check_no_external_urls.py, ark.service (unit template)
+  scripts/             install.sh, doctor.sh, dev.sh, check_no_external_urls.py,
+                       ark.service (unit template)
   catalog/             JSON content catalogs (versioned, offline, URLs verified
                        by scripts/verify_catalog.py)
   data/                ALL runtime data (gitignored): config/, db/, logs/, library/,
