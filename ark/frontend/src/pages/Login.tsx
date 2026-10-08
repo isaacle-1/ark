@@ -36,9 +36,8 @@ export default function Login() {
         <header className="panel-head">
           <div className="flex items-baseline gap-2">
             <KeyRound size={14} className="translate-y-[2px] text-[var(--c-accent)]" />
-            <span className="panel-head-title">Authentication required</span>
+            <span className="panel-head-title">Sign in</span>
           </div>
-          <span className="panel-head-meta">ark access control</span>
         </header>
         <div className="panel-body">
           <form onSubmit={submit} className="flex flex-col gap-3">

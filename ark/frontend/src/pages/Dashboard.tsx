@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { api, fmtBytes, fmtDuration } from "../api/client";
 import type { Health, LibraryItemView } from "../api/types";
 import { useToast } from "../lib/toast";
-import { Badge, IndexRow, PageTitle, Panel, StatusLine, Stat } from "../components/ui";
+import { Badge, IndexRow, PageTitle, Panel, Stat } from "../components/ui";
 
 interface ModuleDef {
   no: string;
@@ -28,14 +28,6 @@ const MODULES: ModuleDef[] = [
   { no: "11", title: "Document Suite", desc: "docx/xlsx/pdf view & edit", phase: "8" },
   { no: "12", title: "System", desc: "Logs, jobs, settings, backups", phase: "this", href: "/logs" },
 ];
-
-function kindTone(status: string): "ok" | "warn" | "err" | "active" | "muted" {
-  if (status === "installed") return "ok";
-  if (status === "downloading" || status === "queued") return "active";
-  if (status === "error") return "err";
-  if (status === "paused") return "warn";
-  return "muted";
-}
 
 export default function Dashboard() {
   const { notifyError } = useToast();
@@ -69,22 +61,12 @@ export default function Dashboard() {
 
   const moduleStatus = health?.modules ?? [];
   const sidecars = health?.sidecars ?? [];
-  const installedCount = items.reduce(
-    (acc, i) => (i.status === "installed" ? acc + 1 : acc),
-    0,
-  );
+  const zimCount = items.filter((i) => i.kind === "zim").length;
+  const manualCount = items.filter((i) => i.kind === "manual").length;
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageTitle
-        kicker="ark — field manual"
-        title="System status"
-        meta={
-          <span className="mono text-[11px] uppercase tracking-widest text-[var(--c-muted)]">
-            v{health?.version ?? "…"} · {health?.ark_home ?? ""} · pid {health?.pid ?? "—"}
-          </span>
-        }
-      />
+      <PageTitle title="System status" />
 
       <div className="mb-4 flex items-center gap-3">
         <label className="label flex cursor-pointer items-center gap-1.5">
@@ -96,12 +78,6 @@ export default function Dashboard() {
           />
           live poll
         </label>
-        <StatusLine
-          tone={health?.status === "ok" ? "ok" : "warn"}
-          className="!text-[11px]"
-        >
-          {health ? (health.status === "ok" ? "all systems nominal" : health.status) : "loading"}
-        </StatusLine>
       </div>
 
       {health && health.problems.length > 0 && (
@@ -129,7 +105,7 @@ export default function Dashboard() {
       </Panel>
 
       {/* 02 — SIDECARS */}
-      <Panel no="02" title="Sidecars" className="mb-4" meta={sidecars.length === 0 ? "none running" : `${sidecars.length} running`}>
+      <Panel no="02" title="Sidecars">
         {sidecars.length === 0 ? (
           <p className="fine py-1">No sidecars active — installed ZIM content is served on demand.</p>
         ) : (
@@ -163,52 +139,20 @@ export default function Dashboard() {
         no="03"
         title="Installed content"
         className="mb-4"
-        meta={`${installedCount} of ${items.length} items installed`}
         actions={
           <Link className="panel-head-meta linked" to="/library">
-            manage →
+            manage
           </Link>
         }
       >
-        {items.length === 0 ? (
-          <p className="fine py-1">Nothing installed yet — pick a pack in the Library (01).</p>
-        ) : (
-          <div className="panel-body-flush">
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>title</th>
-                  <th>kind</th>
-                  <th className="r">size</th>
-                  <th>status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.slice(0, 6).map((i) => (
-                  <tr key={i.id}>
-                    <td className="num">{i.title}</td>
-                    <td className="mono text-[var(--c-muted)]">{i.kind}</td>
-                    <td className="num r">{fmtBytes(i.size)}</td>
-                    <td>
-                      <Badge tone={kindTone(i.status)}>{i.status}</Badge>
-                    </td>
-                  </tr>
-                ))}
-                {items.length > 6 && (
-                  <tr>
-                    <td className="fine" colSpan={4}>
-                      … and {items.length - 6} more — see Library
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <p className="fine px-1 py-1">
+          <span className="num text-sm">{zimCount}</span> zim archive{zimCount === 1 ? "" : "s"} ·{" "}
+          <span className="num text-sm">{manualCount}</span> manual{manualCount === 1 ? "" : "s"} — managed in Library (01).
+        </p>
       </Panel>
 
       {/* 04 — MODULE INDEX */}
-      <Panel no="04" title="Module index" flush meta="numbered sections — this manual">
+      <Panel no="04" title="Module index" flush>
         {MODULES.map((m) => {
           const st = moduleStatus.find((x) => x.name === m.title.toLowerCase());
           const disabled = st?.status === "disabled";
@@ -223,8 +167,7 @@ export default function Dashboard() {
                 <span className="flex items-center justify-end gap-2">
                   <span className="label">{m.phase === "this" ? "active" : `phase ${m.phase}`}</span>
                   {disabled && <Badge tone="muted">disabled</Badge>}
-                  {st && !disabled && <Badge tone="ok">{st.status}</Badge>}
-                  {m.href && <span className="mono text-[10px] text-[var(--c-accent)]">open →</span>}
+                  {st && !disabled && <Badge tone={st.status === "ok" ? "ok" : st.status === "degraded" ? "warn" : "muted"}>{st.status}</Badge>}
                 </span>
               }
             />

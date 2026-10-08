@@ -16,7 +16,7 @@ export default function Search() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageTitle kicker="04 · query" title="Global search" />
+      <PageTitle title="Global search" />
 
       <Panel no="01" title="Search everything">
         <div className="flex items-center gap-2">

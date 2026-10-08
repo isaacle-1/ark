@@ -140,7 +140,6 @@ export default function LogsPage() {
   return (
     <div className="mx-auto max-w-7xl">
       <PageTitle
-        kicker="02 · operations"
         title="Log stream"
         meta={
           <span data-testid="log-status">
@@ -230,7 +229,7 @@ export default function LogsPage() {
         )}
       </Panel>
 
-      <Panel no="02" title="Lines" flush meta={`${rows.length} shown`} testid="log-panel">
+      <Panel no="02" title="Lines" flush testid="log-panel">
         <div className="max-h-[65vh] overflow-y-auto font-mono text-[12px] leading-5" data-testid="log-rows">
           {rows.length === 0 ? (
             <div className="p-4 text-[var(--c-muted)]">No matching lines yet…</div>

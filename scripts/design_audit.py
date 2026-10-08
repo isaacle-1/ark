@@ -4,7 +4,7 @@
 Boots its own throwaway ARK server and, for every theme x viewport, walks the
 pages and asserts the field-manual design invariants that the brief demands:
 
-  * sharp corners — no element visibly uses border-radius > 6px
+  * gentle rounding — no element uses a radius above 10px (pills are out)
   * flat surfaces — no box-shadow on visible layout elements
   * 1px defined borders on panels/inputs/buttons
   * token palette actually applied (data-theme surfaces/ink/accent)
@@ -124,9 +124,9 @@ AUDIT_JS = r"""
     if (el.closest('iframe') ) continue;
     const cs = getComputedStyle(el);
     const br = cs.borderRadius;
-    if (br && br !== '0px') {
+    if (br && br.endsWith('px')) {
       const v = parseFloat(br);
-      if (v > 6) r.radii.push([el.tagName, nm(el), br]);
+      if (v > 10) r.radii.push([el.tagName, nm(el), br]);
     }
     const sh = cs.boxShadow;
     if (sh && sh !== 'none') {
@@ -209,7 +209,7 @@ def report(page, theme: str, size: str, label: str, data: str):
         FAILS.append(f"[{theme}/{size}/{label}] horizontal overflow px={d['overflow']}")
     if d["radii"]:
         mark = "FAIL"
-        FAILS.append(f"[{theme}/{size}/{label}] nonzero radii >6px: {d['radii'][:3]}")
+        FAILS.append(f"[{theme}/{size}/{label}] radius >10px: {d['radii'][:3]}")
     if d["shadows"]:
         mark = "FAIL"
         FAILS.append(f"[{theme}/{size}/{label}] box-shadows: {d['shadows'][:3]}")

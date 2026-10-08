@@ -55,7 +55,7 @@ export default function Settings() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageTitle kicker="03 · configuration" title="Settings" />
+      <PageTitle title="Settings" />
 
       <Panel no="01" title="Appearance" className="mb-4" meta="saved in this browser">
         <div className="flex flex-wrap gap-2">

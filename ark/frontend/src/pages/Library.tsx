@@ -169,11 +169,10 @@ export default function Library() {
   return (
     <div className="mx-auto max-w-6xl">
       <PageTitle
-        kicker="01 · information acquisition"
         title="Library"
         meta={
           <span className="mono text-[11px] uppercase tracking-widest text-[var(--c-muted)]">
-            {verified} verified entries · fixed & checksummed
+            {verified} verified entries
           </span>
         }
       />
@@ -183,7 +182,6 @@ export default function Library() {
         no="01"
         title="Installed zim archives"
         className="mb-4"
-        meta={`${installedZims.length} archive${installedZims.length === 1 ? "" : "s"}`}
         actions={
           <Button
             variant="primary"
@@ -335,7 +333,7 @@ export default function Library() {
       </Panel>
 
       {/* 03 — MANUALS */}
-      <Panel no="03" title="Survival manuals" className="mb-4" meta={`${manuals.length} upload${manuals.length === 1 ? "" : "s"}`} testid="manuals-list">
+      <Panel no="03" title="Survival manuals" testid="manuals-list">
         {isAdmin && (
           <div className="mb-3 flex flex-wrap items-end gap-2">
             <Field label="manual file" className="min-w-[240px]">
