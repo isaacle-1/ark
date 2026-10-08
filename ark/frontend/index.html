@@ -3,10 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b0f14" />
+    <meta name="theme-color" content="#14130e" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>ARK — Autonomous Resilience &amp; Knowledge System</title>
+    <script>
+      /* apply saved theme before first paint (no-flash) */
+      try {
+        document.documentElement.setAttribute(
+          "data-theme",
+          window.localStorage.getItem("ark-theme") || "dark",
+        );
+      } catch (e) {
+        /* ignore */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

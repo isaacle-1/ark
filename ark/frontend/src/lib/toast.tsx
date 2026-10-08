@@ -61,10 +61,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [notify],
   );
 
-  const colors: Record<ToastKind, string> = {
-    info: "border-[var(--c-line)] text-[var(--c-ink)]",
-    success: "border-[color:var(--c-ok)] text-[color:var(--c-ink)]",
-    error: "border-[color:var(--c-err)] text-[color:var(--c-ink)]",
+  const tone: Record<ToastKind, string> = {
+    info: "toast",
+    success: "toast toast-success",
+    error: "toast toast-error",
   };
 
   return (
@@ -75,7 +75,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <button
             key={t.id}
             onClick={() => dismiss(t.id)}
-            className={`card !p-3 text-left text-sm shadow-lg ${colors[t.kind]}`}
+            className={tone[t.kind]}
             title="Click to dismiss"
           >
             {t.text}

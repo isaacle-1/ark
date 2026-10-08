@@ -33,14 +33,22 @@ export class ErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.error) {
       return (
-        <div className="card m-6 border-[color:var(--c-err)]">
-          <h2 className="text-lg font-semibold text-[color:var(--c-err)]">Something crashed</h2>
-          <p className="mt-2 text-sm text-[var(--c-muted)]">
-            {this.state.error.message} — reported to the server logs.
-          </p>
-          <button className="btn btn-primary mt-4" onClick={() => this.setState({ error: null })}>
-            Reload this view
-          </button>
+        <div className="panel m-6 border-[color:var(--c-err)]">
+          <div className="panel-head">
+            <h2 className="panel-head-title text-[color:var(--c-err)]">System fault</h2>
+            <span className="panel-head-meta">client crashes are logged server-side</span>
+          </div>
+          <div className="panel-body">
+            <p className="mono text-sm text-[color:var(--c-err)]">— {this.state.error.message}</p>
+            <p className="fine mt-1">This failure was reported to the server logs.</p>
+            <button
+              className="btn btn-primary mt-4"
+              type="button"
+              onClick={() => this.setState({ error: null })}
+            >
+              Reload this view
+            </button>
+          </div>
         </div>
       );
     }

@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import type { Health } from "../api/types";
 import { useTheme, THEMES, Theme } from "../lib/theme";
 import { useToast } from "../lib/toast";
+import { Button, Field, Panel, PageTitle } from "../components/ui";
 
 const LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"];
 
@@ -54,68 +55,53 @@ export default function Settings() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="mb-4 text-2xl font-bold">Settings</h1>
+      <PageTitle kicker="03 · configuration" title="Settings" />
 
-      <div className="mb-4 space-y-3">
-        <div className="card">
-          <div className="text-sm font-semibold uppercase tracking-wide text-[var(--c-muted)]">
-            Theme
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {THEMES.map((t) => (
-              <button
-                key={t.value}
-                className={"btn " + (theme === t.value ? "btn-primary" : "btn-ghost")}
-                onClick={() => pickTheme(t.value)}
-                data-testid={`theme-${t.value}`}
-              >
-                {t.label}
-              </button>
+      <Panel no="01" title="Appearance" className="mb-4" meta="saved in this browser">
+        <div className="flex flex-wrap gap-2">
+          {THEMES.map((t) => (
+            <Button
+              key={t.value}
+              variant={theme === t.value ? "primary" : "ghost"}
+              onClick={() => pickTheme(t.value)}
+              data-testid={`theme-${t.value}`}
+            >
+              {t.label}
+            </Button>
+          ))}
+        </div>
+        <p className="fine mt-2">{THEMES.find((t) => t.value === theme)?.hint}.</p>
+      </Panel>
+
+      <Panel no="02" title="Logging" className="mb-4">
+        <Field label="log level" className="max-w-[180px]">
+          <select className="input" value={level} onChange={(e) => saveLevel(e.target.value)} data-testid="log-level">
+            {LEVELS.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
             ))}
-          </div>
-          <div className="mt-2 text-xs text-[var(--c-muted)]">
-            {THEMES.find((t) => t.value === theme)?.hint} — saved in this browser.
-          </div>
-        </div>
+          </select>
+        </Field>
+        <p className="fine mt-2">
+          source: <code>{levelSource}</code>
+          {levelSource === "env" && " — LOG_LEVEL env var wins until unset"} · changes take effect
+          immediately and are persisted in the DB.
+        </p>
+      </Panel>
 
-        <div className="card">
-          <div className="text-sm font-semibold uppercase tracking-wide text-[var(--c-muted)]">
-            Log level
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <select className="input !w-48" value={level} onChange={(e) => saveLevel(e.target.value)} data-testid="log-level">
-              {LEVELS.map((l) => (
-                <option key={l} value={l}>
-                  {l}
-                </option>
-              ))}
-            </select>
-            <span className="text-xs text-[var(--c-muted)]">
-              source: {levelSource}
-              {levelSource === "env" && " — LOG_LEVEL env var wins until unset"}
-            </span>
-          </div>
-          <p className="mt-2 text-xs text-[var(--c-muted)]">
-            Changes take effect immediately and are persisted in the DB.
-          </p>
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="text-sm font-semibold uppercase tracking-wide text-[var(--c-muted)]">
-          About
-        </div>
-        <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-          <dt className="text-[var(--c-muted)]">Version</dt>
-          <dd>{health?.version}</dd>
-          <dt className="text-[var(--c-muted)]">ARK_HOME</dt>
-          <dd className="break-all font-mono text-xs">{health?.ark_home}</dd>
-          <dt className="text-[var(--c-muted)]">Auth mode</dt>
-          <dd>{health?.auth_mode}</dd>
-          <dt className="text-[var(--c-muted)]">Process</dt>
-          <dd>pid {health?.pid} · up {Math.round(health?.uptime_seconds ?? 0)}s</dd>
+      <Panel no="03" title="System">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+          <dt className="label py-0.5">Version</dt>
+          <dd className="mono">{health?.version ?? "—"}</dd>
+          <dt className="label py-0.5">ARK_HOME</dt>
+          <dd className="break-all mono text-xs">{health?.ark_home ?? "—"}</dd>
+          <dt className="label py-0.5">Auth mode</dt>
+          <dd className="mono">{health?.auth_mode ?? "—"}</dd>
+          <dt className="label py-0.5">Process</dt>
+          <dd className="mono">pid {health?.pid ?? "—"} · up {Math.round(health?.uptime_seconds ?? 0)}s</dd>
         </dl>
-      </div>
+      </Panel>
     </div>
   );
 }
