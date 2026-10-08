@@ -49,6 +49,14 @@ login_window_seconds = 300
 enabled = true          # in-process background job worker
 poll_interval = 1.0     # seconds between DB polls for queued jobs
 
+[library]
+enabled = true          # ZIM catalog, downloads and manual uploads (Phase 1)
+kiwix_enabled = true    # supervise bin/kiwix-serve when at least one ZIM is installed
+kiwix_port = 8139       # localhost-only kiwix-serve port (reached via /svc/kiwix/…)
+download_chunk_bytes = 1048576   # download read/write chunk (resumable, sha256-checked)
+request_timeout = 30.0  # per-read socket timeout while downloading (seconds)
+max_manual_mb = 100     # upload size limit for manual/PDF uploads
+
 [modules]
 # Per-module toggles. Modules register their own defaults as they land;
 # unknown keys are allowed so later phases can flip things off here.
@@ -84,11 +92,21 @@ class JobsConfig(BaseModel):
     poll_interval: float = Field(default=1.0, ge=0.05, le=60.0)
 
 
+class LibraryConfig(BaseModel):
+    enabled: bool = True
+    kiwix_enabled: bool = True
+    kiwix_port: int = Field(default=8139, ge=1024, le=65535)
+    download_chunk_bytes: int = Field(default=1_048_576, ge=4_096, le=64 * 1024 * 1024)
+    request_timeout: float = Field(default=30.0, ge=5.0, le=300.0)
+    max_manual_mb: int = Field(default=100, ge=1, le=10240)
+
+
 class ArkConfig(BaseModel):
     server: ServerConfig = Field(default_factory=ServerConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     jobs: JobsConfig = Field(default_factory=JobsConfig)
+    library: LibraryConfig = Field(default_factory=LibraryConfig)
     modules: dict[str, bool] = Field(default_factory=dict)
 
     # Not from the file: computed at load time.

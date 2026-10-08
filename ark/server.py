@@ -29,6 +29,7 @@ from ark.paths import Paths, ensure_data_dirs
 from ark.routers import admin as admin_router
 from ark.routers import auth as auth_router
 from ark.routers import health as health_router
+from ark.routers import library as library_router
 from ark.routers import logs as logs_router
 from ark.supervisor import Supervisor, get_sidecar_specs
 
@@ -134,14 +135,15 @@ def create_app(config: ArkConfig | None = None, paths: Paths | None = None) -> F
                     except ValueError:
                         logger.warning("stored log_level setting invalid: %s", row.value)
 
-        worker = create_worker(app_state_db, config, paths)
+        supervisor = Supervisor(paths)
+        app.state.supervisor = supervisor
+        for spec in get_sidecar_specs(paths, config):
+            supervisor.register(spec)
+
+        worker = create_worker(app_state_db, config, paths, supervisor=supervisor)
         app.state.worker = worker
         await worker.start()
 
-        supervisor = Supervisor(paths)
-        app.state.supervisor = supervisor
-        for spec in get_sidecar_specs(paths):
-            supervisor.register(spec)
         await supervisor.start_all()
 
         import logging as _logging
@@ -285,6 +287,7 @@ def create_app(config: ArkConfig | None = None, paths: Paths | None = None) -> F
     app.include_router(auth_router.router)
     app.include_router(logs_router.router)
     app.include_router(admin_router.router)
+    app.include_router(library_router.router)
 
     # --- /svc/<name>/... reverse proxy to supervised sidecars -------------
 

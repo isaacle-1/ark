@@ -18,6 +18,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from ark.config import ArkConfig
 from ark.paths import Paths
 
 logger = logging.getLogger("ark.supervisor")
@@ -129,6 +130,46 @@ class Supervisor:
         spec = self.specs.get(name)
         return spec.port if spec and self.is_running(name) else None
 
+    async def restart(self, name: str, spec: SidecarSpec | None = None) -> None:
+        """Stop a sidecar now; re-register and start it again when a spec is given.
+
+        ``spec=None`` stops it and unregisters it (used when its content
+        disappears, e.g. the last ZIM is deleted).
+        """
+        task = self._tasks.pop(name, None)
+        if task is not None:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+        proc = self._procs.pop(name, None)
+        if proc is not None and proc.returncode is None:
+            try:
+                proc.terminate()
+                await asyncio.wait_for(proc.wait(), timeout=5)
+            except (TimeoutError, ProcessLookupError):
+                try:
+                    proc.kill()
+                    await proc.wait()
+                except ProcessLookupError:
+                    pass
+        st = self.statuses.get(name)
+        if st is not None:
+            st.running = False
+            st.pid = None
+        if spec is None:
+            self.specs.pop(name, None)
+            self.statuses.pop(name, None)
+            logger.info("sidecar stopped and unregistered", extra={"sidecar": name})
+            return
+        self.register(spec)
+        if not self._stopping:
+            self._tasks[name] = asyncio.create_task(
+                self._supervise(spec), name=f"ark-sidecar-{name}"
+            )
+            logger.info("sidecar restarted", extra={"sidecar": name, "port": spec.port})
+
     async def _supervise(self, spec: SidecarSpec) -> None:
         st = self.statuses[spec.name]
         backoff = 1.0
@@ -204,11 +245,50 @@ class Supervisor:
             backoff = min(backoff * 2, 30)
 
 
-def get_sidecar_specs(paths: Paths) -> list[SidecarSpec]:
+def build_kiwix_spec(paths: Paths, config: ArkConfig) -> SidecarSpec | None:
+    """kiwix-serve spec for the currently installed ZIMs, or None if it should
+    not run (module disabled, binary missing, or no ZIMs installed yet) —
+    a missing binary/content degrades to a clear "not running" state, never a
+    crash or a crash-loop.
+    """
+    lib = config.library
+    if not (lib.enabled and lib.kiwix_enabled):
+        return None
+    binary = paths.kiwix_binary
+    if not binary.is_file():
+        return None
+    zims = sorted(p for p in paths.library_dir.glob("*.zim") if p.is_file())
+    if not zims:
+        return None
+    command = (
+        str(binary),
+        "-i",
+        "127.0.0.1",  # only reachable through the /svc/kiwix/ proxy
+        "-p",
+        str(lib.kiwix_port),
+        "-b",  # block external links (offline-first)
+        "-s",
+        "10",  # fulltext search across installed ZIMs
+        "-L",
+        "8",  # connection limit per IP (kiwix-serve recommendation)
+        "-k",  # skip invalid ZIMs instead of refusing to start
+        *(str(z) for z in zims),
+    )
+    return SidecarSpec(
+        name="kiwix",
+        command=command,
+        port=lib.kiwix_port,
+        auto_restart=True,
+        max_restarts_per_minute=6,
+    )
+
+
+def get_sidecar_specs(paths: Paths, config: ArkConfig) -> list[SidecarSpec]:
     """Sidecars to supervise for this installation.
 
-    Later phases append specs here (kiwix-serve, valhalla, …) guarded by
-    "binary exists / module enabled" checks — a missing binary must degrade to
-    a clear "not installed" state, never a crash.
+    Each spec is guarded by "module enabled / binary exists / content
+    present" checks — a missing dependency must degrade to a clear
+    "not installed / not reached" state, never a crash.
     """
-    return []
+    spec = build_kiwix_spec(paths, config)
+    return [spec] if spec is not None else []

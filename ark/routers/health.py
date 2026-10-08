@@ -187,6 +187,50 @@ async def api_health(request: Request) -> dict[str, Any]:
         }
     )
 
+    # library (Phase 1): catalog readable, ZIM dir writable
+    if not config.library.enabled:
+        modules.append(
+            {
+                "name": "library",
+                "healthy": True,
+                "status": "disabled",
+                "reason": "disabled in ark.toml [library]",
+            }
+        )
+    else:
+        lib_ok = True
+        lib_reason: str | None = None
+        entry_count = zim_count = 0
+        try:
+            from ark.library import LibraryError, load_catalog
+
+            try:
+                entry_count = len(load_catalog(paths)["entries"])
+            except LibraryError as exc:
+                lib_ok = False
+                lib_reason = str(exc)
+            zim_count = sum(1 for p in paths.library_dir.glob("*.zim") if p.is_file())
+            if lib_ok and not os.access(paths.library_dir, os.W_OK):
+                lib_ok = False
+                lib_reason = f"cannot write {paths.library_dir}"
+        except Exception:
+            logger.exception("library health check failed")
+            lib_ok = False
+            lib_reason = "library check failed (see data/logs/ark.log)"
+        modules.append(
+            {
+                "name": "library",
+                "healthy": lib_ok,
+                "status": "ok" if lib_ok else "error",
+                "reason": lib_reason,
+                "entries": entry_count,
+                "installed": zim_count,
+                "kiwix_binary": paths.kiwix_binary.is_file(),
+            }
+        )
+        if not lib_ok:
+            problems.append(f"library: {lib_reason}")
+
     # Module toggles from config (later phases add their own checks).
     for name, enabled in sorted(config.modules.items()):
         modules.append(
