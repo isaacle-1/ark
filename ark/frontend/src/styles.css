@@ -87,7 +87,6 @@
   --c-ok: #9cb83a;
   --c-warn: #e08a16;
   --c-err: #e0483b;
-  --c-shadow: rgba(0, 0, 0, 0.35);
   color-scheme: dark;
 }
 
@@ -104,7 +103,6 @@
   --c-ok: #2f6f38;
   --c-warn: #92591a;
   --c-err: #a6192e;
-  --c-shadow: rgba(38, 35, 26, 0.12);
   color-scheme: light;
 }
 
@@ -121,7 +119,6 @@
   --c-ok: #ffb35c;
   --c-warn: #ffcc7a;
   --c-err: #ff4f4f;
-  --c-shadow: rgba(0, 0, 0, 0.5);
   color-scheme: dark;
 }
 
@@ -678,7 +675,6 @@ pre {
   font-size: 0.75rem;
   padding: 0.55rem 0.75rem;
   text-align: left;
-  box-shadow: 0 2px 8px var(--c-shadow);
 }
 .toast-success {
   border-left-color: var(--c-ok);

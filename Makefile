@@ -8,7 +8,7 @@ export PIP_CACHE_DIR := $(ARK_HOME)/data/cache/pip
 export npm_config_cache := $(ARK_HOME)/data/cache/npm
 export PLAYWRIGHT_BROWSERS_PATH := $(ARK_HOME)/data/cache/ms-playwright
 
-.PHONY: all test lint typecheck unit frontend browsers browsers-check e2e check-no-ext dev logs doctor restart install fmt
+.PHONY: all test lint typecheck unit frontend browsers browsers-check e2e check-no-ext dev logs doctor restart install fmt screenshots design-audit
 
 all: test
 
@@ -50,6 +50,16 @@ browsers-check:
 
 check-no-ext:
 	@test -d ark/frontend/dist && $(PY) scripts/check_no_external_urls.py ark/frontend/dist || echo "dist not built yet — skipping no-ext check"
+
+# UI design-pass tooling: throwaway server + real browser.
+# screenshots — capture every theme x viewport, land in docs/screenshots/.
+# design-audit — assert the field-manual invariants (radii, shadows, palette,
+# fonts, overflow, console/network) on every page; exit 1 on any violation.
+screenshots:
+	$(PY) scripts/screenshots.py docs/screenshots
+
+design-audit:
+	$(PY) scripts/design_audit.py
 
 dev:
 	./scripts/dev.sh

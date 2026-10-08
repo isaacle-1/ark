@@ -7,17 +7,7 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>ARK — Autonomous Resilience &amp; Knowledge System</title>
-    <script>
-      /* apply saved theme before first paint (no-flash) */
-      try {
-        document.documentElement.setAttribute(
-          "data-theme",
-          window.localStorage.getItem("ark-theme") || "dark",
-        );
-      } catch (e) {
-        /* ignore */
-      }
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

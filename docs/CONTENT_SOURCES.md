@@ -26,6 +26,19 @@ These are candidates; each is re-verified at the phase that adds it:
 - EHRI / USHMM archival PDFs for the docs phase — **UNVERIFIED**, license status
   to confirm before wiring into a catalog.
 
+## Vendored UI fonts (frontend redesign)
+Shipped inside `ark/frontend/public/fonts/` as static files (no CDN, no fetch at
+runtime). License texts travel next to each file (`*-OFL.txt`).
+
+| Font | Purpose | License | URL |
+|---|---|---|---|
+| Barlow Condensed (Regular/Medium/SemiBold/Bold) | display headings / masthead | SIL OFL 1.1 | https://github.com/jpt/barlow |
+| Roboto (variable wght+wdth) | body text | Apache 2.0 | https://github.com/google/fonts |
+| Roboto Mono (variable wght) | data / identifiers | Apache 2.0 | https://github.com/google/fonts |
+
+(Google Fonts source downloads: `raw.githubusercontent.com/google/fonts/main`,
+checked out per-file, not via the Google Fonts API so nothing phones home.)
+
 ## Phase 1 — Kiwix ZIM library (verified, 19 entries)
 `catalog/kiwix.json` is the source of truth. Every entry records `size`,
 `sha256`, a `zim_url` (working mirror) plus `mirror_urls` (all verified
