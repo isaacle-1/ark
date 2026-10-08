@@ -64,6 +64,7 @@ runtime except the Content Manager's explicit download actions.
 
 ```bash
 make test          # lint + typecheck + unit/integration tests + frontend build + no-external-URL check
+make e2e           # playwright smoke (needs: playwright install chromium, PLAYWRIGHT_BROWSERS_PATH set)
 make dev           # hot-reload backend (:8080) + Vite dev server (:5173)
 make logs          # tail data/logs/ark.log (JSON lines)
 make doctor        # ark doctor — actionable health checks
@@ -127,5 +128,7 @@ ARK_HOME (= repo root)
 
 ## Phase status
 
-- **Phase 0 (Foundation): IN PROGRESS.**
+- **Phase 0 (Foundation): COMPLETE — PR #1 open (`phase-0-foundation` → `main`), awaiting user merge.**
+  All gates green: `make test` + `make e2e` locally, CI (backend/frontend/e2e/docker) pass,
+  systemd service running in this LXC, deliberate-break drill 32 ms.
 - Phases 1–9: not started (see the master prompt / PR descriptions for scope).
