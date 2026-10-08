@@ -1,7 +1,9 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { KeyRound } from "lucide-react";
 import { ApiError, api } from "../api/client";
 import { useToast } from "../lib/toast";
+import { Button, Field, Panel } from "../components/ui";
 
 export default function Login() {
   const { notifyError } = useToast();
@@ -29,42 +31,47 @@ export default function Login() {
   }
 
   return (
-    <div className="mx-auto mt-10 max-w-sm">
-      <div className="card">
-        <div className="mb-4 flex items-center gap-2">
-          <img src="/icon.svg" alt="" className="h-8 w-8" />
-          <div>
-            <div className="text-lg font-bold">ARK</div>
-            <div className="text-xs text-[var(--c-muted)]">admin sign-in</div>
+    <div className="flex min-h-full items-center justify-center p-4">
+      <Panel className="w-full max-w-sm">
+        <header className="panel-head">
+          <div className="flex items-baseline gap-2">
+            <KeyRound size={14} className="translate-y-[2px] text-[var(--c-accent)]" />
+            <span className="panel-head-title">Sign in</span>
           </div>
+        </header>
+        <div className="panel-body">
+          <form onSubmit={submit} className="flex flex-col gap-3">
+            <Field label="username">
+              <input
+                className="input"
+                autoComplete="username"
+                placeholder="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </Field>
+            <Field label="password">
+              <input
+                className="input"
+                type="password"
+                autoComplete="current-password"
+                placeholder="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </Field>
+            <Button variant="primary" type="submit" disabled={busy} data-testid="login-btn" className="mt-1 w-full">
+              {busy ? "Signing in…" : "Sign in"}
+            </Button>
+          </form>
+          <p className="fine mt-3">
+            First login: the generated admin credentials are in{" "}
+            <code>data/config/initial-credentials.txt</code> on the server.
+          </p>
         </div>
-        <form onSubmit={submit} className="flex flex-col gap-3">
-          <input
-            className="input"
-            autoComplete="username"
-            placeholder="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-          <input
-            className="input"
-            type="password"
-            autoComplete="current-password"
-            placeholder="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button className="btn btn-primary justify-center" disabled={busy} data-testid="login-btn">
-            {busy ? "Signing in…" : "Sign in"}
-          </button>
-        </form>
-        <p className="mt-3 text-xs text-[var(--c-muted)]">
-          First login: the generated admin credentials are in{" "}
-          <code>data/config/initial-credentials.txt</code> on the server.
-        </p>
-      </div>
+      </Panel>
     </div>
   );
 }

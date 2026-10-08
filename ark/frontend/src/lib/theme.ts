@@ -34,5 +34,5 @@ export function useTheme(): [Theme, (t: Theme) => void] {
 export const THEMES: { value: Theme; label: string; hint: string }[] = [
   { value: "dark", label: "Dark", hint: "default night-friendly UI" },
   { value: "light", label: "Light", hint: "daylight / print" },
-  { value: "rednight", label: "Red night", hint: "low light — preserves night vision" },
+  { value: "rednight", label: "Red night", hint: "low light, preserves night vision" },
 ];

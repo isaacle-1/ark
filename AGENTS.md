@@ -69,7 +69,20 @@ make dev           # hot-reload backend (:8080) + Vite dev server (:5173)
 make logs          # tail data/logs/ark.log (JSON lines)
 make doctor        # ark doctor — actionable health checks
 make restart       # sudo systemctl restart ark
+make screenshots   # ui-design pass: capture all themes x viewports into docs/screenshots/
+make design-audit  # ui-design gate: assert field-manual invariants (radii, shadows,
+                   # palette, fonts, overflow, console/network) — exit 1 on violation
 ```
+
+- UI design-pass loop: `npm run build --prefix ark/frontend`, then `make screenshots`
+  and `make design-audit`. Both boot throwaway servers on :8138/:8139 and reap them
+  on exit (never leave a stray `ark serve` — check `ss -ltn` if a run aborts).
+  Design tokens live in `ark/frontend/src/styles.css`; components in
+  `ark/frontend/src/components/ui.tsx` (Panel/Button/Badge/StatusLine/Field/…).
+  Fonts are vendored under `ark/frontend/public/fonts/` (Barlow Condensed +
+  Roboto + Roboto Mono, OFL/Apache texts adjacent — keep the license files).
+  The theme-init script is a real file (`public/theme-init.js`) because the
+  server CSP is `script-src 'self'`; never put inline `<script>` in index.html.
 
 - The service runs as systemd unit **`ark`**: `systemctl status ark`,
   `journalctl -u ark -n 100`, restart with `sudo systemctl restart ark`.
@@ -129,10 +142,10 @@ ARK_HOME (= repo root)
 ## Phase status
 
 - **Phase 0 (Foundation): COMPLETE, MERGED** (`f32caac` on `main`), phase-0-repro-fixes PR #2 open.
-- **Phase 1 (Information Library): IN PROGRESS** on `phase-1-library`. Backend
-  engine + API + sidecar + frontend implemented; `make test` and `make e2e`
-  green locally. Remaining: push + PR. Rules honored: catalog URLs verified
-  against live sources (19 entries), only the 62 KB fixture ZIM used in tests,
-  downloads resumable + hash-verified + under `data/`. iFixit license remains
-  **UNVERIFIED** (user decision required before enabling that entry).
+- **Phase 1 (Information Library): COMPLETE, MERGED** (PR #3); `ui-redesign` PR in flight —
+  field-manual design pass (tokens + components + page restyles + screenshots), no
+  functionality changes. Rules honored: catalog URLs verified against live sources
+  (19 entries), only the 62 KB fixture ZIM used in tests, downloads resumable +
+  hash-verified + under `data/`. iFixit license remains **UNVERIFIED** (user decision
+  required before enabling that entry).
 - Phases 2–9: not started (see the master prompt / PR descriptions for scope).

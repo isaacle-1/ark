@@ -20,6 +20,9 @@ from pathlib import Path
 # - reactjs.org: React's minified invariant message text ("visit …/error-decoder")
 # - tailwindcss.com: a comment inside the generated CSS
 # Both of the above are plain strings in the bundle; nothing ever fetches them.
+# - github.com + openfontlicense.org: front/body of the SIL OFL v1.1 license
+#   texts shipped as plain .txt next to the vendored fonts (never loaded by a
+#   browser — documentation strings, same nature as reactjs.org above).
 ALLOWED_HOSTS = {
     "localhost",
     "127.0.0.1",
@@ -33,6 +36,9 @@ ALLOWED_HOSTS = {
     "purl.org",
     "reactjs.org",
     "tailwindcss.com",
+    "github.com",
+    "openfontlicense.org",
+    "scripts.sil.org",
 }
 
 ABS_URL_RE = re.compile(r"(?:https?://)([^/\"'()\s<>\\]+)")

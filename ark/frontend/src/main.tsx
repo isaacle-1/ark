@@ -3,10 +3,13 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ToastProvider } from "./lib/toast";
+import { applyTheme, getTheme } from "./lib/theme";
 import "./styles.css";
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("#root element missing");
+
+applyTheme(getTheme());
 
 createRoot(rootEl).render(
   <StrictMode>

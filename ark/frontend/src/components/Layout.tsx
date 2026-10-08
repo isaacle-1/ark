@@ -1,9 +1,11 @@
-/* Layout: sidebar nav, status footer, current user menu. */
+/* Layout: module-index sidebar, system status footer, user menu. */
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { LogOut, UserRound } from "lucide-react";
 import { api } from "../api/client";
 import type { Health, Me } from "../api/types";
 import { useToast } from "../lib/toast";
+import { Button, StatusLine } from "./ui";
 
 const NAV = [
   { to: "/", label: "Dashboard", end: true },
@@ -61,53 +63,70 @@ export default function Layout() {
 
   return (
     <div className="flex h-full flex-col lg:flex-row">
-      <aside className="flex flex-row items-center justify-between gap-2 border-b border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-2 lg:h-full lg:w-56 lg:flex-col lg:items-stretch lg:border-b-0 lg:border-r">
-        <div className="flex items-center gap-2">
-          <img src="/icon.svg" alt="" className="h-7 w-7" />
+      <aside className="no-print flex flex-row items-center justify-between gap-2 border-b border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-1.5 lg:h-full lg:w-60 lg:flex-col lg:items-stretch lg:border-b-0 lg:border-r lg:py-0">
+        {/* masthead */}
+        <div className="flex items-center gap-2 py-1 lg:border-b lg:border-[var(--c-line)] lg:px-3 lg:py-3">
+          <img src="/icon.svg" alt="" className="h-6 w-6" />
           <div className="leading-tight">
-            <div className="font-bold tracking-wide">ARK</div>
-            <div className="hidden text-[10px] uppercase tracking-wider text-[var(--c-muted)] lg:block">
-              {health?.status === "degraded" ? "degraded" : "operational"}
-            </div>
+            <div className="display text-[17px] font-bold tracking-[0.08em]">ARK</div>
+            <div className="label">resilience &amp; knowledge</div>
           </div>
         </div>
-        <nav className="flex items-center gap-1 lg:flex-col lg:items-stretch lg:gap-1 lg:pt-4">
+
+        {/* module index */}
+        <nav className="flex items-center gap-0.5 overflow-x-auto lg:flex-col lg:overflow-visible lg:pt-2" aria-label="Module index">
           {nav.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
               end={n.end}
-              className={({ isActive }) =>
-                `rounded-md px-3 py-1.5 text-sm transition-colors ${
-                  isActive
-                    ? "bg-[var(--c-panel2)] text-[var(--c-accent)]"
-                    : "text-[var(--c-muted)] hover:text-[var(--c-ink)]"
-                }`
-              }
+              className={({ isActive }) => "nav-item " + (isActive ? "active" : "")}
             >
               {n.label}
             </NavLink>
           ))}
         </nav>
-        <div className="hidden lg:mt-auto lg:flex lg:flex-col lg:gap-2 lg:border-t lg:border-[var(--c-line)] lg:pt-3">
+
+        {/* status + user */}
+        <div className="hidden shrink-0 lg:mt-auto lg:flex lg:flex-col lg:gap-2 lg:border-t lg:border-[var(--c-line)] lg:px-3 lg:py-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="label">system</span>
+            <StatusLine
+              tone={health?.status === "degraded" ? "warn" : "ok"}
+              className="!text-[10px]"
+            >
+              {health?.status === "degraded" ? "degraded" : "operational"}
+            </StatusLine>
+          </div>
           {me?.user ? (
-            <>
-              <div className="text-sm">
-                <span className="font-medium">{me.user.username}</span>{" "}
-                <span className="badge text-[var(--c-accent)]">{me.user.role}</span>
-              </div>
-              <button className="btn btn-ghost" onClick={logout}>
-                Log out
+            <div className="flex items-center justify-between gap-2">
+              <span className="mono flex min-w-0 items-center gap-1.5 text-xs">
+                <UserRound size={13} className="shrink-0" />
+                <span className="truncate">{me.user.username}</span>
+              </span>
+              <button
+                className="btn-plain btn !py-1 text-[10px]"
+                onClick={logout}
+                title="Log out"
+                data-testid="logout-btn"
+              >
+                <LogOut size={12} />
+                out
               </button>
-            </>
+            </div>
           ) : (
-            <button className="btn btn-primary" onClick={() => navigate("/login")}>
+            <Button
+              variant="primary"
+              onClick={() => navigate("/login")}
+              className="w-full justify-center"
+            >
               Log in
-            </button>
+            </Button>
           )}
         </div>
       </aside>
-      <main className="min-h-0 flex-1 overflow-y-auto p-4 lg:p-6">
+
+      <main className="min-h-0 flex-1 overflow-y-auto p-3 lg:p-5">
         <Outlet />
       </main>
     </div>

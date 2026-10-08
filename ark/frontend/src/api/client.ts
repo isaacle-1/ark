@@ -41,7 +41,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       if (typeof b.request_id === "string") requestId = b.request_id;
     }
   } catch {
-    /* non-JSON error body — fall back to defaults */
+    /* non-JSON error body, fall back to defaults */
   }
   throw new ApiError(res.status, describeDetail(detail, res.statusText), requestId);
 }
@@ -61,7 +61,7 @@ export const api = {
 };
 
 export function fmtBytes(n: number | null | undefined): string {
-  if (n == null || Number.isNaN(n)) return "—";
+  if (n == null || Number.isNaN(n)) return "n/a";
   if (n < 1024) return `${n} B`;
   const units = ["KiB", "MiB", "GiB", "TiB"];
   let v = n;
@@ -74,7 +74,7 @@ export function fmtBytes(n: number | null | undefined): string {
 }
 
 export function fmtDuration(seconds: number | null | undefined): string {
-  if (seconds == null) return "—";
+  if (seconds == null) return "n/a";
   const s = Math.max(0, Math.round(seconds));
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
