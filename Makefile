@@ -8,7 +8,7 @@ export PIP_CACHE_DIR := $(ARK_HOME)/data/cache/pip
 export npm_config_cache := $(ARK_HOME)/data/cache/npm
 export PLAYWRIGHT_BROWSERS_PATH := $(ARK_HOME)/data/cache/ms-playwright
 
-.PHONY: all test lint typecheck unit frontend e2e check-no-ext dev logs doctor restart install fmt
+.PHONY: all test lint typecheck unit frontend e2e check-no-ext dev logs doctor restart install fmt verify-catalog fixture
 
 all: test
 
@@ -56,3 +56,17 @@ install:
 
 fmt:
 	$(PY) -m ruff format ark tests scripts
+
+# Re-resolve + re-verify every catalog entry against live Kiwix sources.
+# Network access required; not part of the `test` gate.
+verify-catalog:
+	$(PY) -u scripts/verify_catalog.py
+
+# Rebuild the tiny test ZIM (needs: apt install zim-tools).
+fixture:
+	zimwriterfs --welcome=index.html --illustration=illustration.png --language=eng \
+		--title="ARK Test Fixture" \
+		--description="Tiny test archive for ARK automated tests" \
+		--longDescription="A handful of short original articles used only for ARK's automated tests and demos." \
+		--creator="ARK project" --publisher="ARK" --name=ark-fixture --flavour=test \
+		tests/fixtures/fixture-src tests/fixtures/ark-fixture.zim
