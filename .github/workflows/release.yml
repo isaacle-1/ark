@@ -1,0 +1,62 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  offline-bundle:
+    name: Build offline release bundle
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Wheelhouse
+        run: |
+          pip download -r requirements.txt --dest wheelhouse --only-binary=:all:
+          pip download -r requirements-dev.txt --dest wheelhouse --only-binary=:all: || true
+      - name: Frontend
+        working-directory: ark/frontend
+        run: npm ci && npm run build
+      - name: Sanity
+        run: |
+          python3 scripts/check_no_external_urls.py ark/frontend/dist
+          python3 -m compileall -q ark
+      - name: Tarball
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          tar -czf "ark-${VERSION}-offline.tar.gz" \
+            ark migrations alembic.ini requirements.txt pyproject.toml \
+            catalog scripts docs wheelhouse \
+            --exclude ark/frontend/node_modules
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ark-*-offline.tar.gz
+          generate_release_notes: true
+
+  container:
+    name: Publish container image
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/isaacle-1/ark:${{ github.ref_name }}
+            ghcr.io/isaacle-1/ark:latest

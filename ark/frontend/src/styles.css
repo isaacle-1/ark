@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* Theme tokens — semantic colors bound to data-theme (dark / light / rednight). */
+@theme {
+  --color-surface: var(--c-surface);
+  --color-panel: var(--c-panel);
+  --color-panel2: var(--c-panel2);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-line: var(--c-line);
+  --color-accent: var(--c-accent);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-ok: var(--c-ok);
+  --color-warn: var(--c-warn);
+  --color-err: var(--c-err);
+}
+
+:root {
+  --c-surface: #0b0f14;
+  --c-panel: #111826;
+  --c-panel2: #172234;
+  --c-ink: #dfe9f3;
+  --c-muted: #7d93ab;
+  --c-line: #24405e;
+  --c-accent: #6db2ff;
+  --c-accent-ink: #04131f;
+  --c-ok: #4ade80;
+  --c-warn: #fbbf24;
+  --c-err: #f87171;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --c-surface: #f4f7fb;
+  --c-panel: #ffffff;
+  --c-panel2: #e8eef5;
+  --c-ink: #152433;
+  --c-muted: #5b6f84;
+  --c-line: #c9d7e4;
+  --c-accent: #1868b8;
+  --c-accent-ink: #ffffff;
+  --c-ok: #15803d;
+  --c-warn: #a16207;
+  --c-err: #b91c1c;
+  color-scheme: light;
+}
+
+[data-theme="rednight"] {
+  --c-surface: #120a0a;
+  --c-panel: #1d1111;
+  --c-panel2: #291717;
+  --c-ink: #f4dede;
+  --c-muted: #a97c7c;
+  --c-line: #4a2323;
+  --c-accent: #ff7a7a;
+  --c-accent-ink: #2b0505;
+  --c-ok: #ffb38a;
+  --c-warn: #ffd27a;
+  --c-err: #ff5555;
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--c-line); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-muted); }
+
+.btn {
+  @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none;
+}
+.btn-primary { @apply text-accent-ink; background: var(--c-accent); }
+.btn-primary:hover { opacity: 0.9; }
+.btn-ghost {
+  @apply text-ink; background: transparent; border: 1px solid var(--c-line);
+}
+.btn-ghost:hover { background: var(--c-panel2); }
+.btn-danger { @apply text-white; background: var(--c-err); }
+.btn-danger:hover { opacity: 0.9; }
+
+.input {
+  @apply w-full rounded-md border px-3 py-1.5 text-sm outline-none;
+  background: var(--c-panel);
+  border-color: var(--c-line);
+  color: var(--c-ink);
+}
+.input:focus { border-color: var(--c-accent); }
+.input[data-light="true"] { background: var(--c-surface); }
+
+.card {
+  @apply rounded-xl border p-4;
+  background: var(--c-panel);
+  border-color: var(--c-line);
+}
+
+.badge {
+  @apply rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+}

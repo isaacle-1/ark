@@ -1,0 +1,21 @@
+# ARK — container alternative to the native/systemd install.
+# Sidecar services (kiwix, valhalla, …) join in later phases.
+services:
+  ark:
+    build: .
+    image: ghcr.io/isaacle-1/ark:latest
+    container_name: ark
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - ARK_HOME=/app
+      - HOME=/app/data/home
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/healthz',timeout=2).status==200 else 1)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3

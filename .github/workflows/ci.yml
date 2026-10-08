@@ -1,0 +1,86 @@
+name: CI
+on:
+  push:
+    branches: [main, "phase-*"]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (ruff, mypy, pytest)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt
+          pip install -e . 2>/dev/null || true
+      - name: Ruff lint + format
+        run: |
+          ruff check ark tests scripts
+          ruff format --check ark tests scripts
+      - name: mypy
+        run: mypy ark
+      - name: Unit + integration tests
+        run: pytest -q tests
+
+  frontend:
+    name: Frontend (lint, tsc, build, no-external-URL)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ark/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ark/frontend/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: ESLint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: No external URLs (offline-first gate)
+        working-directory: .
+        run: python3 scripts/check_no_external_urls.py ark/frontend/dist
+
+  e2e:
+    name: E2E (playwright smoke)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install python deps
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Build frontend
+        working-directory: ark/frontend
+        run: npm ci && npm run build
+      - name: Install Playwright browsers
+        run: playwright install --with-deps chromium
+      - name: Run e2e
+        run: pytest -q tests/e2e
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ghcr.io/isaacle-1/ark:ci
