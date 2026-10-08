@@ -1,0 +1,34 @@
+[Unit]
+Description=ARK — Autonomous Resilience and Knowledge System
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=ark
+Group=ark
+WorkingDirectory=@ARK_HOME@
+Environment=ARK_HOME=@ARK_HOME@
+Environment=HOME=@ARK_HOME@/data/home
+# Fail fast on config problems; systemd will restart capped by StartLimitBurst.
+Restart=on-failure
+RestartSec=3
+StartLimitBurst=5
+StartLimitIntervalSec=30
+
+# Secure the service:
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadOnlyPaths=/usr /bin /lib /etc
+ReadWritePaths=@ARK_HOME@/data
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_UNIX_PATH
+
+ExecStart=@ARK_HOME@/.venv/bin/python -m ark serve
+
+[Install]
+WantedBy=multi-user.target

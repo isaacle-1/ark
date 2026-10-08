@@ -1,0 +1,57 @@
+[project]
+name = "ark"
+version = "0.1.0"
+description = "ARK — Autonomous Resilience and Knowledge System: self-hosted, fully offline, post-collapse survival toolkit"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+
+# Runtime dependencies live in requirements.txt (fully pinned for reproducible,
+# offline wheelhouse installs). Keep this table in sync for tooling metadata.
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy>=2.0",
+    "alembic",
+    "pydantic>=2",
+    "argon2-cffi",
+    "httpx",
+    "python-multipart",
+    "psutil",
+]
+
+[project.scripts]
+ark = "ark.cli:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv", "data", "bin", "migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "SIM105",  # try/except/pass is fine for suppression passes
+    "RUF001", "RUF002", "RUF003",  # ambiguous unicode in user-facing strings
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "B011"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["ark"]
+warn_unused_configs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+ignore_missing_imports = true
+exclude = ["ark/frontend", "data", ".venv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning:pkg_resources",
+]

@@ -1,0 +1,30 @@
+# Runtime data — never commit
+data/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Node / frontend
+node_modules/
+ark/frontend/dist/
+ark/frontend/.vite/
+playwright-report/
+test-results/
+
+# Local env & secrets
+.env
+*.local
+
+# OS noise
+.DS_Store
+Thumbs.db
+# Sidecar/tool binaries downloaded by scripts/install.sh (kiwix-serve, node, etc.)
+bin/
