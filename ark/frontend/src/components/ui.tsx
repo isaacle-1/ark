@@ -198,6 +198,7 @@ export function IndexRow({
   desc,
   meta,
   action,
+  muted = false,
   onClick,
   onKeyDown,
   href,
@@ -206,19 +207,25 @@ export function IndexRow({
   desc?: ReactNode;
   meta?: ReactNode;
   action?: ReactNode;
+  muted?: boolean;
   onClick?: () => void;
   onKeyDown?: (e: KeyboardEvent) => void;
   href?: string;
 }) {
-  const cls = "index-row" + (onClick || href ? " cursor-pointer" : "");
+  const cls =
+    "index-row" +
+    (onClick || href ? " cursor-pointer" : "") +
+    (muted ? " muted" : "");
   const body = (
     <>
+      <span className="index-title">{title}</span>
       <span className="index-main">
-        <span className="index-title">{title}</span>
         {desc && <span className="index-desc">{desc}</span>}
       </span>
-      {meta && <span className="index-meta">{meta}</span>}
-      {action}
+      <span className="index-meta">
+        {meta}
+        {action}
+      </span>
     </>
   );
   if (href) {

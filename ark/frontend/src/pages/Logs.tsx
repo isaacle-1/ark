@@ -1,5 +1,6 @@
 /* Logs page: live SSE tail, filter, pause, copy-as-text, download. Admin. */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Copy, Download, Pause, Play, X } from "lucide-react";
 import { api } from "../api/client";
 import type { LogEntry, LogFile, LogHistory } from "../api/types";
@@ -21,11 +22,13 @@ function LevelChip({ level }: { level: string }) {
 
 export default function LogsPage() {
   const { notify, notifyError } = useToast();
+  const [params] = useSearchParams();
   const [files, setFiles] = useState<LogFile[]>([]);
   const [file, setFile] = useState("ark.log");
   const [level, setLevel] = useState<string>("INFO");
   const [module, setModule] = useState("");
   const [reqId, setReqId] = useState("");
+  const [jobId, setJobId] = useState(params.get("job") ?? "");
   const [contains, setContains] = useState("");
   const [paused, setPaused] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -40,9 +43,10 @@ export default function LogsPage() {
         level,
         ...(module ? { module } : {}),
         ...(reqId ? { request_id: reqId } : {}),
+        ...(jobId ? { job_id: jobId } : {}),
         ...(contains ? { contains } : {}),
       }),
-    [file, level, module, reqId, contains],
+    [file, level, module, reqId, jobId, contains],
   );
 
   const fullQuery = query.toString();
@@ -138,114 +142,124 @@ export default function LogsPage() {
   const liveText = paused ? "paused" : connected ? "live" : "connecting…";
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="page">
       <PageTitle
         title="Log stream"
         meta={
           <span data-testid="log-status">
-            <StatusLine tone={liveTone} className="!text-[11px]">
+            <StatusLine tone={liveTone} className="!text-[12px]">
               {liveText}
             </StatusLine>
           </span>
         }
       />
 
-      <Panel title="Filter" className="mb-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <Field label="source" className="min-w-[180px]">
-            <select className="input" value={file} onChange={(e) => setFile(e.target.value)}>
-              {files.map((f) => (
-                <option key={f.name} value={f.name}>
-                  {f.name}
-                  {f.mtime ? ` (${new Date(f.mtime * 1000).toLocaleDateString()})` : ""}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="level ≥" className="w-28">
-            <select className="input" value={level} onChange={(e) => setLevel(e.target.value)}>
-              {LEVELS.map((l) => (
-                <option key={l} value={l}>
-                  {l}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="module" className="w-44">
-            <input
-              className="input"
-              placeholder="library, maps…"
-              value={module}
-              onChange={(e) => setModule(e.target.value)}
-            />
-          </Field>
-          <Field label="request id" className="w-56">
-            <input
-              className="input"
-              placeholder="request_id"
-              value={reqId}
-              onChange={(e) => setReqId(e.target.value)}
-            />
-          </Field>
-          <Field label="contains" className="w-44">
-            <input
-              className="input"
-              placeholder="text contains…"
-              value={contains}
-              onChange={(e) => setContains(e.target.value)}
-            />
-          </Field>
-          <div className="flex flex-wrap gap-2">
-            <Button variant={paused ? "primary" : "ghost"} onClick={togglePause} data-testid="pause-btn">
-              {paused ? (
-                <>
-                  <Play size={12} /> resume
-                </>
-              ) : (
-                <>
-                  <Pause size={12} /> pause
-                </>
-              )}
-            </Button>
-            <Button onClick={copyText}>
-              <Copy size={12} /> copy
-            </Button>
-            <Button href={`/api/admin/logs/download?file=${encodeURIComponent(file)}`}>
-              <Download size={12} /> download
-            </Button>
-            <Button
-              variant="plain"
-              onClick={() => {
-                setRows([]);
-                seen.current.clear();
-              }}
-            >
-              <X size={12} /> clear
-            </Button>
-          </div>
-        </div>
-        {file !== "ark.log" && (
-          <p className="fine mt-2">Live tail is limited to ark.log this phase.</p>
-        )}
-      </Panel>
-
-      <Panel title="Lines" flush testid="log-panel">
-        <div className="max-h-[65vh] overflow-y-auto font-mono text-[12px] leading-5" data-testid="log-rows">
-          {rows.length === 0 ? (
-            <div className="p-4 text-[var(--c-muted)]">No matching lines yet…</div>
-          ) : (
-            <table className="w-full border-collapse">
-              <tbody>
-                {rows.map((r, i) => (
-                  <Row key={i} entry={r} onExpand={() => setDetail(r)} />
+      <div className="panel-stack">
+        <Panel title="Filter">
+          <div className="flex flex-wrap items-end gap-3">
+            <Field label="source" className="min-w-[180px]">
+              <select className="input" value={file} onChange={(e) => setFile(e.target.value)}>
+                {files.map((f) => (
+                  <option key={f.name} value={f.name}>
+                    {f.name}
+                    {f.mtime ? ` (${new Date(f.mtime * 1000).toLocaleDateString()})` : ""}
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </Field>
+            <Field label="level ≥" className="w-28">
+              <select className="input" value={level} onChange={(e) => setLevel(e.target.value)}>
+                {LEVELS.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="module" className="w-44">
+              <input
+                className="input"
+                placeholder="library, maps…"
+                value={module}
+                onChange={(e) => setModule(e.target.value)}
+              />
+            </Field>
+            <Field label="request id" className="w-56">
+              <input
+                className="input"
+                placeholder="request_id"
+                value={reqId}
+                onChange={(e) => setReqId(e.target.value)}
+              />
+            </Field>
+            <Field label="job id" className="w-56">
+              <input
+                className="input"
+                placeholder="job_id"
+                value={jobId}
+                onChange={(e) => setJobId(e.target.value)}
+              />
+            </Field>
+            <Field label="contains" className="w-44">
+              <input
+                className="input"
+                placeholder="text contains…"
+                value={contains}
+                onChange={(e) => setContains(e.target.value)}
+              />
+            </Field>
+            <div className="flex flex-wrap gap-2">
+              <Button variant={paused ? "primary" : "ghost"} onClick={togglePause} data-testid="pause-btn">
+                {paused ? (
+                  <>
+                    <Play size={12} /> resume
+                  </>
+                ) : (
+                  <>
+                    <Pause size={12} /> pause
+                  </>
+                )}
+              </Button>
+              <Button onClick={copyText}>
+                <Copy size={12} /> copy
+              </Button>
+              <Button href={`/api/admin/logs/download?file=${encodeURIComponent(file)}`}>
+                <Download size={12} /> download
+              </Button>
+              <Button
+                variant="plain"
+                onClick={() => {
+                  setRows([]);
+                  seen.current.clear();
+                }}
+              >
+                <X size={12} /> clear
+              </Button>
+            </div>
+          </div>
+          {file !== "ark.log" && (
+            <p className="fine mt-2">Live tail is limited to ark.log this phase.</p>
           )}
-        </div>
-      </Panel>
+        </Panel>
 
-      {detail && <DetailPanel entry={detail} onClose={() => setDetail(null)} />}
+        <Panel title="Lines" flush testid="log-panel">
+          <div className="max-h-[65vh] overflow-y-auto font-mono text-[13px] leading-5" data-testid="log-rows">
+            {rows.length === 0 ? (
+              <div className="p-4 text-[var(--c-muted)]">No matching lines yet…</div>
+            ) : (
+              <table className="w-full border-collapse">
+                <tbody>
+                  {rows.map((r, i) => (
+                    <Row key={i} entry={r} onExpand={() => setDetail(r)} />
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </Panel>
+
+        {detail && <DetailPanel entry={detail} onClose={() => setDetail(null)} />}
+      </div>
     </div>
   );
 }
@@ -275,9 +289,7 @@ function Row({ entry, onExpand }: { entry: LogEntry; onExpand: () => void }) {
 function DetailPanel({ entry, onClose }: { entry: LogEntry; onClose: () => void }) {
   return (
     <Panel title="Full json line" className="border-[color:var(--c-accent)]" actions={<Button variant="plain" onClick={onClose}>close</Button>}>
-      <pre className="overflow-x-auto p-2 text-[12px]" style={{ background: "var(--c-surface)", border: "1px solid var(--c-line)" }}>
-        {JSON.stringify(entry, null, 1)}
-      </pre>
+      <pre className="frame overflow-x-auto p-2">{JSON.stringify(entry, null, 1)}</pre>
     </Panel>
   );
 }

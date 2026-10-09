@@ -127,7 +127,9 @@ export default function Layout() {
       </aside>
 
       <main className="min-h-0 flex-1 overflow-y-auto p-3 lg:p-5">
-        <Outlet />
+        <div className="mx-auto w-full" style={{ maxWidth: "var(--content-maxw)" }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

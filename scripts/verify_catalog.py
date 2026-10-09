@@ -58,10 +58,11 @@ LICENSE_BY_CATEGORY: dict[str, tuple[str, str | None, str]] = {
         "Project Gutenberg books are public domain in the US.",
     ),
     "iFixit": (
-        "UNVERIFIED",
-        None,
-        "iFixit wiki terms not confirmed from an authoritative page — "
-        "confirm before redistributing this ZIM.",
+        "CC-BY-NC-SA-3.0",
+        "https://www.ifixit.com/Info/Licensing",
+        "All iFixit content is CC BY-NC-SA 3.0 (noncommercial, share alike, "
+        "attribution); personal offline copies permitted. iFixit announced "
+        "the free Kiwix offline archive (ifixit.com/News/64006).",
     ),
     "devdocs": (
         "mixed-per-source",

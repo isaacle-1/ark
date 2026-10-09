@@ -58,6 +58,7 @@ def _matches(
     min_level: str | None,
     module: str | None,
     request_id: str | None,
+    job_id: str | None,
     contains: str | None,
 ) -> bool:
     if min_level:
@@ -69,6 +70,8 @@ def _matches(
         if not (logger_name == f"ark.{module}" or logger_name.startswith(f"ark.{module}.")):
             return False
     if request_id and entry.get("request_id") != request_id:
+        return False
+    if job_id and str(entry.get("job_id", "")) != job_id:
         return False
     return not (contains and contains.lower() not in str(entry.get("msg", "")).lower())
 
@@ -106,6 +109,7 @@ async def log_history(
     level: str | None = Query(default=None, pattern="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$"),
     module: str | None = Query(default=None, max_length=64),
     request_id: str | None = Query(default=None, max_length=64),
+    job_id: str | None = Query(default=None, max_length=64),
     contains: str | None = Query(default=None, max_length=200),
     _: object = Depends(require_admin),
 ) -> dict[str, Any]:
@@ -116,7 +120,14 @@ async def log_history(
         obj
         for raw in raw_lines
         if (obj := _parse_line(raw))
-        and _matches(obj, min_level=level, module=module, request_id=request_id, contains=contains)
+        and _matches(
+            obj,
+            min_level=level,
+            module=module,
+            request_id=request_id,
+            job_id=job_id,
+            contains=contains,
+        )
     ]
     return {"items": entries[-lines:], "file": file, "total_in_file": len(raw_lines)}
 
@@ -213,6 +224,7 @@ async def log_stream(
     level: str | None = Query(default=None, pattern="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$"),
     module: str | None = Query(default=None, max_length=64),
     request_id: str | None = Query(default=None, max_length=64),
+    job_id: str | None = Query(default=None, max_length=64),
     contains: str | None = Query(default=None, max_length=200),
     _: object = Depends(require_admin),
 ) -> StreamingResponse:
@@ -226,7 +238,12 @@ async def log_stream(
         if obj is None:
             return False
         return _matches(
-            obj, min_level=level, module=module, request_id=request_id, contains=contains
+            obj,
+            min_level=level,
+            module=module,
+            request_id=request_id,
+            job_id=job_id,
+            contains=contains,
         )
 
     sent: set[str] = set()
