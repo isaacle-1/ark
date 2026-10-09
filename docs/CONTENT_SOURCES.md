@@ -56,13 +56,17 @@ mirror) by `scripts/verify_catalog.py` (`make verify-catalog`).
 | wikibooks_en_all / nopic | 2 | CC BY-SA 4.0 | per-file |
 | gutenberg_en_lcc-{pf,pd,ph} | — | public domain | per-file |
 | devdocs_en_bash | — | mixed-per-source (per-doc; see OPDS) | 572 KB |
-| ifixit_en_all | — | **UNVERIFIED** — see note | per-file |
+| ifixit_en_all | full | **CC BY-NC-SA 3.0** (noncommercial, share-alike) | 3.6 GB |
 
-**iFixit license — UNVERIFIED.** Added provisionally because the ZIM itself is
-CC-BY-SA-3.0 friendly, but iFixit's contributor terms historically restrict
-redistribution. It is left `unverified` in the catalog so the app refuses to
-install it until the user confirms it is acceptable. **Ask the user before
-enabling this entry.**
+**iFixit license — verified.** iFixit's official licensing page
+(ifixit.com/Info/Licensing) states *all* iFixit content is licensed under
+Creative Commons BY-NC-SA 3.0 — a license that allows copying and
+redistribution (share) for noncommercial use with attribution, so personal
+offline copies are permitted. iFixit itself announced and hosts the free
+Kiwix offline archive (N.B. the *scraper* project openzim/ifixit is GPL-3.0;
+the *content* it packages remains CC BY-NC-SA). Recorded in the catalog as
+`license: CC-BY-NC-SA-3.0`, source URL `https://www.ifixit.com/Info/Licensing`.
+Bundles are data in `catalog/kiwix.json` (`schema: 2` adds `tiers`/`bundles`).
 
 ### Mirror reliability notes
 - `wi.mirror.driftle.ss` blackholes requests from this box (curl returns `000`,

@@ -56,6 +56,8 @@ kiwix_port = 8139       # localhost-only kiwix-serve port (reached via /svc/kiwi
 download_chunk_bytes = 1048576   # download read/write chunk (resumable, sha256-checked)
 request_timeout = 30.0  # per-read socket timeout while downloading (seconds)
 max_manual_mb = 100     # upload size limit for manual/PDF uploads
+disk_overhead_pct = 5   # extra space reserved per selection (temp, resume, indexes)
+disk_min_margin_mb = 1024 # hard free-space margin kept after a selection installs
 
 [modules]
 # Per-module toggles. Modules register their own defaults as they land;
@@ -99,6 +101,8 @@ class LibraryConfig(BaseModel):
     download_chunk_bytes: int = Field(default=1_048_576, ge=4_096, le=64 * 1024 * 1024)
     request_timeout: float = Field(default=30.0, ge=5.0, le=300.0)
     max_manual_mb: int = Field(default=100, ge=1, le=10240)
+    disk_overhead_pct: float = Field(default=5.0, ge=0.0, le=100.0)
+    disk_min_margin_mb: int = Field(default=1024, ge=0, le=1024 * 1024)
 
 
 class ArkConfig(BaseModel):

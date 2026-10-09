@@ -1,5 +1,5 @@
 {
- "schema": 1,
+ "schema": 2,
  "opds": "https://opds.library.kiwix.org/catalog/v2/entries",
  "updated": "2026-10-08T19:53:27+00:00",
  "entries": [
@@ -552,9 +552,9 @@
    "zim_url": "https://ny.mirror.driftle.ss/kiwix/zim/ifixit/ifixit_en_all_2025-12.zim",
    "meta4_url": "https://lb.download.kiwix.org/zim/ifixit/ifixit_en_all_2025-12.zim.meta4",
    "browse_url": "https://browse.library.kiwix.org/content/ifixit_en_all_2025-12",
-   "license": "UNVERIFIED",
-   "license_url": null,
-   "license_note": "iFixit wiki terms not confirmed from an authoritative page — confirm before redistributing this ZIM.",
+   "license": "CC-BY-NC-SA-3.0",
+   "license_url": "https://www.ifixit.com/Info/Licensing",
+   "license_note": "All iFixit content is CC BY-NC-SA 3.0 (noncommercial, share alike, attribution); personal offline copies are permitted. iFixit announced and hosts the free Kiwix offline archive.",
    "status": "verified",
    "verified_at": "2026-10-08T19:53:25+00:00",
    "verify_error": null,
@@ -592,6 +592,183 @@
     "https://wi.mirror.driftle.ss/kiwix/zim/devdocs/devdocs_en_bash_2026-10.zim",
     "https://ftp.nluug.nl/pub/kiwix/zim/devdocs/devdocs_en_bash_2026-10.zim",
     "https://mirror.download.kiwix.org/zim/devdocs/devdocs_en_bash_2026-10.zim"
+   ]
+  }
+ ],
+ "tiers": {
+  "full": {
+   "label": "Full",
+   "description": "Complete archive, images included"
+  },
+  "maxi": {
+   "label": "Maxi",
+   "description": "With images; largest size"
+  },
+  "nopic": {
+   "label": "No pictures",
+   "description": "All articles, no images"
+  },
+  "mini": {
+   "label": "Mini",
+   "description": "All articles, no images; smallest size"
+  },
+  "top": {
+   "label": "Top",
+   "description": "Most-read articles only"
+  }
+ },
+ "bundles": [
+  {
+   "id": "essentials",
+   "title": "Essentials",
+   "description": "Smallest useful survival set: an intro Wikipedia, the medical reference, a knots-and-quick-how-to guide, and iFixit repair manuals.",
+   "spec": [
+    {
+     "name": "wikipedia_en-simple_all",
+     "tier": "mini"
+    },
+    {
+     "name": "wikipedia_en_medicine",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_knots",
+     "tier": "maxi"
+    },
+    {
+     "name": "ifixit_en_all",
+     "tier": "full"
+    }
+   ]
+  },
+  {
+   "id": "standard",
+   "title": "Standard",
+   "description": "Full-text Wikipedia without images, the medical reference, key encyclopedic slices, wikibooks and iFixit repair guides.",
+   "spec": [
+    {
+     "name": "wikipedia_en_all",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_medicine",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_top",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_history",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_geography",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_physics",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_chemistry",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_mathematics",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_climate-change",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en-simple_all",
+     "tier": "mini"
+    },
+    {
+     "name": "wikibooks_en_all",
+     "tier": "nopic"
+    },
+    {
+     "name": "ifixit_en_all",
+     "tier": "full"
+    }
+   ]
+  },
+  {
+   "id": "complete",
+   "title": "Complete",
+   "description": "Everything verified, with images where published: full Wikipedia, medical, wikibooks, encyclopedic slices and repair manuals.",
+   "spec": [
+    {
+     "name": "wikipedia_en_all",
+     "tier": "maxi"
+    },
+    {
+     "name": "wikipedia_en_medicine",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_top",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_history",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_geography",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_physics",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_chemistry",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_mathematics",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en_climate-change",
+     "tier": "nopic"
+    },
+    {
+     "name": "wikipedia_en-simple_all",
+     "tier": "mini"
+    },
+    {
+     "name": "wikipedia_en_knots",
+     "tier": "maxi"
+    },
+    {
+     "name": "wikibooks_en_all",
+     "tier": "nopic"
+    },
+    {
+     "name": "gutenberg_en_lcc-pf",
+     "tier": "full"
+    },
+    {
+     "name": "gutenberg_en_lcc-pd",
+     "tier": "full"
+    },
+    {
+     "name": "gutenberg_en_lcc-ph",
+     "tier": "full"
+    },
+    {
+     "name": "ifixit_en_all",
+     "tier": "full"
+    },
+    {
+     "name": "devdocs_en_bash",
+     "tier": "full"
+    }
    ]
   }
  ]

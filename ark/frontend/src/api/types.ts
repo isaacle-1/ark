@@ -136,9 +136,88 @@ export interface LibraryEntry {
   downloadable: boolean;
 }
 
+export interface LibraryTierMeta {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export interface PlanTier {
+  id: string;
+  label: string;
+  description: string;
+  flavour: string | null;
+  title: string;
+  size: number | null;
+  license: string | null;
+  license_url: string | null;
+  license_note: string | null;
+  status: string;
+  verified_at: string | null;
+  source_url: string | null;
+  downloadable: boolean;
+  installed: boolean;
+  item_status: string | null;
+  active_job: LibraryJobBrief | null;
+  item: LibraryItemView | null;
+  item_error: string | null;
+}
+
+export interface PlanGroup {
+  name: string;
+  title: string;
+  category: string;
+  language: string;
+  tiers: PlanTier[];
+}
+
+export interface PlanBundleMember {
+  name: string;
+  tier: string;
+  title: string;
+  size: number | null;
+  verified: boolean;
+}
+
+export interface PlanBundle {
+  id: string;
+  title: string;
+  description: string;
+  members: PlanBundleMember[];
+  total_bytes: number | null;
+  incomplete: boolean;
+  incomplete_reasons: string[];
+}
+
+export interface CatalogPlan {
+  tiers: Record<string, LibraryTierMeta>;
+  groups: PlanGroup[];
+  bundles: PlanBundle[];
+}
+
 export interface LibraryCatalog {
   updated: string | null;
   entries: LibraryEntry[];
+  plan: CatalogPlan;
+}
+
+export interface PreflightSelection {
+  name: string;
+  tier: string;
+}
+
+export interface Preflight {
+  selection_bytes: number;
+  overhead_bytes: number;
+  needed_bytes: number;
+  free_bytes: number;
+  free_after_bytes: number;
+  total_bytes: number;
+  used_pct: number;
+  fits: boolean;
+  blocked_reason: string | null;
+  hint: string | null;
+  excluded: string[];
 }
 
 export interface LibraryItems {

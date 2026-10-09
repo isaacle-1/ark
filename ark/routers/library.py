@@ -17,12 +17,16 @@ from ark.auth import require_admin, require_read
 from ark.jobs import enqueue
 from ark.library import (
     LibraryError,
+    build_catalog_plan,
     entry_key,
     find_entry,
+    find_entry_by_tier,
     job_brief,
     load_catalog,
+    preflight_disk,
     refresh_kiwix,
     safe_manual_name,
+    selection_totals,
     unique_dest,
     zim_filename,
 )
@@ -38,6 +42,16 @@ _ZIM_STATUSES = ("queued", "downloading", "installed", "error", "paused")
 class InstallRequest(BaseModel):
     name: str = Field(min_length=1, max_length=128, pattern=r"^[a-z0-9._-]+$")
     flavour: str | None = Field(default=None, max_length=64, pattern=r"^[a-z0-9._-]*$")
+    tier: str | None = Field(default=None, min_length=1, max_length=64, pattern=r"^[a-z0-9._-]+$")
+
+
+class PreflightSelection(BaseModel):
+    name: str = Field(min_length=1, max_length=128, pattern=r"^[a-z0-9._-]+$")
+    tier: str = Field(min_length=1, max_length=64, pattern=r"^[a-z0-9._-]+$")
+
+
+class PreflightRequest(BaseModel):
+    selections: list[PreflightSelection] = Field(min_length=0, max_length=200)
 
 
 def _require_enabled(request: Request) -> None:
@@ -119,6 +133,7 @@ async def get_catalog(request: Request) -> dict[str, Any]:
     with request.app.state.db.session() as db:
         zim_items, jobs, _ = _load_items(db)
     entries: list[dict[str, Any]] = []
+    views: dict[str, dict[str, Any]] = {}
     for entry in catalog["entries"]:
         key = entry_key(entry.get("name", ""), entry.get("flavour"))
         item = zim_items.get(key)
@@ -137,7 +152,25 @@ async def get_catalog(request: Request) -> dict[str, Any]:
             "installed",
         )
         entries.append(out)
-    return {"updated": catalog.get("updated"), "entries": entries}
+        views[key] = out
+    plan = build_catalog_plan(catalog, views)
+    return {"updated": catalog.get("updated"), "entries": entries, "plan": plan}
+
+
+@router.post("/preflight", dependencies=[Depends(require_admin)])
+async def preflight(body: PreflightRequest, request: Request) -> dict[str, Any]:
+    """Disk math + combined totals for a mixed tier selection (does not start anything)."""
+    _require_enabled(request)
+    paths = request.app.state.paths
+    try:
+        catalog = load_catalog(paths)
+    except LibraryError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    picks = [(s.name, s.tier) for s in body.selections]
+    total, excluded = selection_totals(catalog, picks)
+    disk = preflight_disk(paths, request.app.state.config, total)
+    disk["excluded"] = excluded
+    return {"selections": len(picks), "total_bytes": total, **disk}
 
 
 @router.post("/install", status_code=202, dependencies=[Depends(require_admin)])
@@ -148,16 +181,23 @@ async def install(body: InstallRequest, request: Request) -> dict[str, Any]:
         catalog = load_catalog(paths)
     except LibraryError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-    entry = find_entry(catalog, body.name, body.flavour)
-    if entry is None:
-        raise HTTPException(
-            status_code=404, detail=f"Catalog entry not found: {entry_key(body.name, body.flavour)}"
-        )
+    if body.tier is not None:
+        entry = find_entry_by_tier(catalog, body.name, body.tier)
+        if entry is None:
+            raise HTTPException(
+                status_code=404, detail=f"Catalog entry not found: {body.name}:{body.tier}"
+            )
+    else:
+        entry = find_entry(catalog, body.name, body.flavour)
+        if entry is None:
+            raise HTTPException(
+                status_code=404, detail=f"Catalog entry not found: {entry_key(body.name, body.flavour)}"
+            )
     if entry.get("status") != "verified":
         raise HTTPException(
             status_code=409,
             detail=(
-                f"Catalog entry {entry_key(body.name, body.flavour)} is not verified "
+                f"Catalog entry {entry_key(entry['name'], entry.get('flavour'))} is not verified "
                 f"({entry.get('verify_error') or 'run scripts/verify_catalog.py'})"
             ),
         )

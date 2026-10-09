@@ -120,6 +120,15 @@ ARK_HOME (= repo root)
 
 ## Conventions
 
+- **Design system frozen:** `ark/frontend/src/styles.css` and
+  `ark/frontend/src/components/ui.tsx` are the **only** styling source
+  (no ad-hoc inline styles, no Tailwind utility classes in new complex
+  blocks except those already used by existing components). If you need
+  spacing/layout, add a minimal token or class in `styles.css` first.
+- **No visual claims:** the agent must **not** state that the UI "looks good",
+  "is clean", "looks nice", etc. Report only objective audit results (counts,
+  contrasts, overflow, console/network errors, build success, gate pass/fail).
+  Flag any item that requires human visual judgment.
 - Python 3.12, full type hints, `mypy` clean, `ruff` clean.
   Deps in `requirements.txt` (runtime) / `requirements-dev.txt` (tools);
   run from repo root with `.venv/bin/python -m ark …` (no pip install of the

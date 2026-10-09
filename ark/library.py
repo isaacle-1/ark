@@ -87,6 +87,230 @@ def zim_filename(name: str, flavour: str | None) -> str:
     return f"{base}.zim"
 
 
+# -- catalog plan (items/groups, per-item tiers, curated bundles) ------------
+#
+# catalog/kiwix.json stays the verified machine truth (one row per archive).
+# Two optional top-level keys make it a "plan":
+#   "tiers"  — {tier-id: {label, description}} presentation overrides (the
+#              defaults below are used for anything else).
+#   "bundles" — curated sets of {name, tier} pick-lists defined as data
+#               (never in code). Bundles containing an unverified item are
+#               reported as incomplete and the item is excluded from the
+#               computed total.
+# The API arranges entries into logical items (same ``name``) whose tiers are
+# the size variants (``flavour``), so the UI shows tiers side by side.
+
+LATER_PHASE_HINT = (
+    "RAG search indexes, offline maps, and video content will need more disk "
+    "in later phases. Keep a safety margin when planning selections."
+)
+
+_CATEGORY_PRIORITY = ("wikipedia", "wikibooks", "ifixit", "gutenberg", "devdocs")
+
+TIER_META_DEFAULT: dict[str, dict[str, str]] = {
+    "full": {"label": "Full", "description": "Complete archive, images included"},
+    "maxi": {"label": "Maxi", "description": "With images; largest size"},
+    "nopic": {"label": "No pictures", "description": "All articles, no images"},
+    "mini": {"label": "Mini", "description": "All articles, no images; smallest size"},
+    "top": {"label": "Top", "description": "Most-read articles only"},
+}
+
+
+def tier_id_of(entry: dict[str, Any]) -> str:
+    """The logical tier id of a catalog entry (flavour; 'full' when none)."""
+    return (entry.get("flavour") or "").strip() or "full"
+
+
+def iter_entries(catalog: dict[str, Any]) -> list[dict[str, Any]]:
+    entries = catalog.get("entries")
+    return [e for e in entries if isinstance(e, dict)] if isinstance(entries, list) else []
+
+
+def _tier_meta(catalog: dict[str, Any], tier_id: str) -> dict[str, str]:
+    override = (catalog.get("tiers") or {}).get(tier_id) or {}
+    base = dict(TIER_META_DEFAULT.get(tier_id, {"label": tier_id, "description": "Variant"}))
+    base.update({k: v for k, v in override.items() if isinstance(v, str)})
+    return base
+
+
+def find_entry_by_tier(catalog: dict[str, Any], name: str, tier: str) -> dict[str, Any] | None:
+    """Resolve an entry by its logical tier id (name + tier)."""
+    for entry in iter_entries(catalog):
+        if entry.get("name") == name and tier_id_of(entry) == tier:
+            return entry
+    return None
+
+
+def _group_sort_key(group: dict[str, Any]) -> tuple[int, str]:
+    name = str(group["name"])
+    if name == "wikipedia_en_all":
+        return (-1, "")
+    priority = _CATEGORY_PRIORITY.index(group["category"]) if group["category"] in _CATEGORY_PRIORITY else 99
+    return (priority, name)
+
+
+def build_catalog_plan(
+    catalog: dict[str, Any],
+    view_map: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Group entries into items with tiers, and expand curated bundles.
+
+    ``view_map`` maps ``entry_key(name, flavour)`` to the annotated entry view
+    already built by the API (adds item/status/job fields per tier).
+    """
+    by_name: dict[str, list[dict[str, Any]]] = {}
+    for entry in iter_entries(catalog):
+        by_name.setdefault(str(entry.get("name")), []).append(entry)
+
+    tiers_meta: dict[str, dict[str, str]] = {}
+    groups: list[dict[str, Any]] = []
+    for name, entry_list in by_name.items():
+        entry_list.sort(key=lambda e: e.get("size") or 0)
+        first = entry_list[0]
+        tiers: list[dict[str, Any]] = []
+        for entry in entry_list:
+            tid = tier_id_of(entry)
+            meta = _tier_meta(catalog, tid)
+            key = entry_key(name, entry.get("flavour"))
+            view = view_map.get(key, {})
+            tiers.append(
+                {
+                    "id": tid,
+                    "label": meta["label"],
+                    "description": meta["description"],
+                    "flavour": entry.get("flavour"),
+                    "title": str(entry.get("title") or name),
+                    "size": entry.get("size"),
+                    "license": entry.get("license"),
+                    "license_url": entry.get("license_url"),
+                    "license_note": entry.get("license_note"),
+                    "status": entry.get("status"),
+                    "verified_at": entry.get("verified_at"),
+                    "source_url": entry.get("browse_url") or entry.get("zim_url"),
+                    "downloadable": bool(view.get("downloadable")),
+                    "installed": bool(view.get("installed")),
+                    "item_status": view.get("item_status"),
+                    "active_job": view.get("active_job"),
+                    "item": view.get("item"),
+                }
+            )
+        for tid in tiers:
+            tiers_meta[tid["id"]] = {"id": tid["id"], "label": tid["label"], "description": tid["description"]}
+        groups.append(
+            {
+                "name": name,
+                "title": str(first.get("title") or name),
+                "category": str(first.get("category") or ""),
+                "language": first.get("language"),
+                "tiers": tiers,
+            }
+        )
+    groups.sort(key=_group_sort_key)
+
+    bundles: list[dict[str, Any]] = []
+    for bundle in catalog.get("bundles") or []:
+        members = []
+        total = 0
+        excluded = False
+        reasons: list[str] = []
+        for spec in bundle.get("spec") or []:
+            name = str(spec.get("name", ""))
+            tier = str(spec.get("tier", ""))
+            entry = find_entry_by_tier(catalog, name, tier)
+            if entry is None:
+                excluded = True
+                reasons.append(f"{name}:{tier}: not in catalog")
+                members.append({"name": name, "tier": tier, "title": name, "size": 0, "verified": False})
+                continue
+            verified = entry.get("status") == "verified"
+            if not verified:
+                excluded = True
+                reasons.append(
+                    f"{name}:{tier}: not verified "
+                    f"({entry.get('verify_error') or 'run scripts/verify_catalog.py'})"
+                )
+            size = entry.get("size") if verified else 0
+            total += size
+            members.append(
+                {
+                    "name": name,
+                    "tier": tier,
+                    "title": str(entry.get("title") or name),
+                    "size": size,
+                    "verified": verified,
+                }
+            )
+        bundles.append(
+            {
+                "id": str(bundle.get("id")),
+                "title": str(bundle.get("title")),
+                "description": str(bundle.get("description") or ""),
+                "members": members,
+                "total_bytes": total,
+                "incomplete": excluded,
+                "incomplete_reasons": reasons,
+            }
+        )
+
+    return {"tiers": tiers_meta, "groups": groups, "bundles": bundles}
+
+
+def selection_totals(
+    catalog: dict[str, Any],
+    selections: list[tuple[str, str]],
+) -> tuple[int, list[str]]:
+    """Sum verified sizes for ``(name, tier)`` picks; report any that are skipped."""
+    excluded: list[str] = []
+    total = 0
+    for name, tier in selections:
+        entry = find_entry_by_tier(catalog, name, tier)
+        if entry is None or entry.get("status") != "verified":
+            excluded.append(f"{name}:{tier}")
+            continue
+        total += int(entry.get("size") or 0)
+    return total, excluded
+
+
+def preflight_disk(
+    paths: Paths,
+    config: ArkConfig,
+    selection_bytes: int,
+) -> dict[str, Any]:
+    """Disk math for a selection: what it needs, what survives, does it fit."""
+    import shutil
+
+    usage = shutil.disk_usage(paths.home)
+    overhead = int(
+        max(
+            selection_bytes * config.library.disk_overhead_pct / 100.0,
+            config.library.disk_min_margin_mb * 1024 * 1024,
+        )
+    )
+    needed = selection_bytes + overhead
+    free_after = usage.free - needed if selection_bytes else usage.free
+    fits = selection_bytes == 0 or free_after >= 0
+    blocked_reason = (
+        None
+        if fits
+        else (
+            f"Not enough free space: needs {needed} bytes (selection + temp/resume "
+            f"margin), only {usage.free} free."
+        )
+    )
+    return {
+        "selection_bytes": selection_bytes,
+        "overhead_bytes": overhead,
+        "needed_bytes": needed,
+        "free_bytes": usage.free,
+        "free_after_bytes": max(0, free_after),
+        "total_bytes": usage.total,
+        "used_pct": round((needed / usage.total) * 100, 1) if usage.total else 0.0,
+        "fits": bool(fits),
+        "blocked_reason": blocked_reason,
+        "hint": LATER_PHASE_HINT,
+    }
+
+
 # -- files ------------------------------------------------------------------
 
 
